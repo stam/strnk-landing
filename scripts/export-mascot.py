@@ -6,7 +6,9 @@ from pathlib import Path
 root=Path(bpy.data.filepath).parent.parent
 scene=bpy.context.scene
 assert scene.name.startswith('STRNK')
-parts=[o for o in scene.objects if o.type=='MESH']
+tagged=[o for o in scene.objects if o.type=='MESH' and o.get('mascot_export')]
+parts=tagged or [o for o in scene.objects if o.type=='MESH']
+assert parts, 'No mascot meshes to export'
 stats=[]
 depsgraph=bpy.context.evaluated_depsgraph_get()
 for obj in parts:
