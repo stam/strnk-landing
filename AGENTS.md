@@ -1,13 +1,13 @@
-# Working context
+# Repository instructions
 
-## Design direction
+- Before visual work, read [the art direction](docs/mascot-art-direction.md) and inspect `strnk-logo.svg` and `assets/strnk-concept.png`. Preserve user reference files.
+- Follow [the Blender and web review loop](tools/blender/README.md). Actually inspect the resulting PNGs; successful scripts or manifold geometry do not establish visual quality.
+- Keep reusable automation in `tools/`; generated reviews and one-off experiments belong in ignored `.tmp/`. The `.blend` is the editable source of truth.
 
-- Focus on the first viewport: STRNK / “Powerful software” on the left, muscular tree-stump mascot on the right.
-- The studio camera views the front of the character. Fists face inward toward the trunk and must have correct anatomical handedness: viewer-left is the character's right hand. Thumb roots belong on the corresponding radial palm edge, starting near the wrist and wrapping across the curled fingers. Use a simple clenched mass and thumb, not detailed finger bars.
-- Inspect `strnk-logo.svg` and the newly added `assets/strnk-concept.png` before further visual work. Preserve user reference files.
-- The user specifically challenged insufficient visual review. Actually inspect solid front, low-angle, and side/elevated renders, then desktop/mobile wireframe screenshots. A successful script or closed mesh alone does not establish visual quality.
+## Local environment
 
-## Local tools
-
-- Blender 5.2.1 has the **Blender Lab** MCP extension installed. Its local socket listens on `localhost:9876`. The external Python process speaks MCP to Codex and communicates with that socket.
-- Codex’s configured bridge uses `uvx --python 3.11 --from "git+https://projects.blender.org/lab/blender_mcp.git#subdirectory=mcp" blender-mcp`. Do not replace this with bare `uvx blender-mcp`, which selects a different project.
+- Windows workspace; use the user's Cmder backed by `cmd.exe`. Start one persistent session with `cmd.exe /k C:\Users\Jasper\Documents\cmder\vendor\init.bat`, reuse it, and close it with `exit` after work. Plain `yarn` works there.
+- Prefer native Blender MCP tools; discover deferred tools and probe `get_blendfile_summary_path_info` first. Connection refused means start Blender and its Lab MCP server, not reinstall the bridge.
+- Blender 5.2.1 uses the Blender Lab extension on `localhost:9876`. Bridge setup is in the workflow document.
+- Routine Blender MCP approval is configured in the user's Codex config; reconnect to pick up changes. This does not grant unrelated shell, Node, or browser approvals. Use normal escalation when necessary.
+- If `uvx` is missing from an agent's PATH, its verified location is `C:\Users\Jasper\AppData\Local\Microsoft\WinGet\Packages\astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe\uvx.exe`.
