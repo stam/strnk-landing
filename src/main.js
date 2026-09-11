@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
+import { Reflector } from "three/addons/objects/Reflector.js";
 import { createContour } from "./contour.js";
 import "./style.css";
 
@@ -200,46 +201,101 @@ async function start() {
   studioSpot("#ddd9d2", 155, 0.2, 0.55, 1.7, 0.72, 0.9);
   studioSpot("#ff6d2e", 650, 1.08, 0.9, -1.6, 0.74, 0.9);
   studioSpot("#ff6d2e", 210, 0.95, -0.2, -1.25, 0.62, 0.92);
-  const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(scale * 200, scale * 200),
-    new THREE.MeshPhysicalMaterial({
-      color: "#070605",
-      roughness: 0.94,
-      metalness: 0,
-      clearcoat: 0.04,
-      clearcoatRoughness: 1,
-      reflectivity: 0.12,
-      envMapIntensity: 0.055,
-    }),
+  const floorViewport = new THREE.Vector2();
+  const floorReflectionShader = {
+    uniforms: {
+      color: { value: null },
+      tDiffuse: { value: null },
+      textureMatrix: { value: null },
+      floorCenter: { value: new THREE.Vector2(center.x, center.z) },
+      floorFadeStart: { value: scale * 0.55 },
+      floorFadeEnd: { value: scale * 1.65 },
+      floorViewport: { value: floorViewport },
+      floorOpacity: { value: 0.32 },
+      reflectionTexel: { value: new THREE.Vector2(1 / 512, 1 / 512) },
+    },
+    vertexShader: `
+      uniform mat4 textureMatrix;
+      varying vec4 vUv;
+      varying vec3 floorWorldPosition;
+
+      #include <common>
+      #include <logdepthbuf_pars_vertex>
+
+      void main() {
+        vUv = textureMatrix * vec4( position, 1.0 );
+        floorWorldPosition = ( modelMatrix * vec4( position, 1.0 ) ).xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+        #include <logdepthbuf_vertex>
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 color;
+      uniform sampler2D tDiffuse;
+      uniform vec2 floorCenter;
+      uniform float floorFadeStart;
+      uniform float floorFadeEnd;
+      uniform vec2 floorViewport;
+      uniform float floorOpacity;
+      uniform vec2 reflectionTexel;
+      varying vec4 vUv;
+      varying vec3 floorWorldPosition;
+
+      #include <logdepthbuf_pars_fragment>
+
+      vec4 reflectedSample( vec2 offset ) {
+        return texture2DProj( tDiffuse, vUv + vec4( offset * vUv.w, 0.0, 0.0 ) );
+      }
+
+      void main() {
+        #include <logdepthbuf_fragment>
+
+        vec2 blur = reflectionTexel * 2.5;
+        vec4 reflection = reflectedSample( vec2( 0.0 ) ) * 0.20;
+        reflection += reflectedSample( vec2( blur.x, 0.0 ) ) * 0.12;
+        reflection += reflectedSample( vec2( -blur.x, 0.0 ) ) * 0.12;
+        reflection += reflectedSample( vec2( 0.0, blur.y ) ) * 0.12;
+        reflection += reflectedSample( vec2( 0.0, -blur.y ) ) * 0.12;
+        reflection += reflectedSample( blur ) * 0.08;
+        reflection += reflectedSample( -blur ) * 0.08;
+        reflection += reflectedSample( vec2( blur.x, -blur.y ) ) * 0.08;
+        reflection += reflectedSample( vec2( -blur.x, blur.y ) ) * 0.08;
+
+        float floorDistance = length( floorWorldPosition.xz - floorCenter );
+        float radialFade = 1.0 - smoothstep( floorFadeStart, floorFadeEnd, floorDistance );
+        vec2 floorEdgeDistance = min( gl_FragCoord.xy, floorViewport - gl_FragCoord.xy );
+        vec2 floorScreenFade = smoothstep( vec2( 0.0 ), floorViewport * 0.10, floorEdgeDistance );
+        float floorFade = radialFade * floorScreenFade.x * floorScreenFade.y;
+
+        gl_FragColor = vec4( color + reflection.rgb * 0.18, floorOpacity * floorFade );
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }
+    `,
+  };
+  const ground = new Reflector(
+    new THREE.PlaneGeometry(scale * 500, scale * 500),
+    {
+      color: "#050504",
+      textureWidth: 512,
+      textureHeight: 512,
+      clipBias: 0.002,
+      multisample: 0,
+      shader: floorReflectionShader,
+    },
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.set(center.x, bounds.min.y - 0.015, center.z);
   ground.receiveShadow = true;
   ground.visible = !wireframe;
+  ground.material.transparent = true;
+  ground.material.depthWrite = false;
+  const renderFloorReflection = ground.onBeforeRender;
+  ground.onBeforeRender = (renderer, ...renderArgs) => {
+    renderer.getDrawingBufferSize(ground.material.uniforms.floorViewport.value);
+    renderFloorReflection.call(ground, renderer, ...renderArgs);
+  };
   scene.add(ground);
-  // A one-time local PMREM probe gives the rough floor only a muted, blurred
-  // reflection of the sculpture; it avoids inventing an HDR studio backdrop.
-  if (!wireframe) {
-    const reflectionTarget = new THREE.WebGLCubeRenderTarget(128);
-    const reflectionProbe = new THREE.CubeCamera(
-      0.1,
-      scale * 8,
-      reflectionTarget,
-    );
-    reflectionProbe.position.set(
-      center.x,
-      bounds.min.y + 0.04,
-      center.z + scale * 0.08,
-    );
-    ground.visible = false;
-    reflectionProbe.update(renderer, scene);
-    ground.visible = true;
-    const pmrem = new THREE.PMREMGenerator(renderer);
-    ground.material.envMap = pmrem.fromCubemap(
-      reflectionTarget.texture,
-    ).texture;
-    ground.material.needsUpdate = true;
-  }
   let pointerX = 0,
     pointerY = 0,
     frame;
