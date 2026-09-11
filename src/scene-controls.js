@@ -1,16 +1,27 @@
-export function createLightingControls({ GUI, lighting, applyKey, applyFill, applyExposure, renderOnce }) {
-  const initial = JSON.parse(JSON.stringify(lighting));
-  const gui = new GUI({ title: 'Lighting', width: 248, closeFolders: true });
+export function createSceneControls({
+  GUI,
+  lighting,
+  floor,
+  applyKey,
+  applyFill,
+  applyExposure,
+  applyFloor,
+  renderOnce,
+}) {
+  const initial = JSON.parse(JSON.stringify({ lighting, floor }));
+  const gui = new GUI({ title: 'Scene', width: 248, closeFolders: true });
+  gui.domElement.dataset.sceneControls = 'true';
   const controllers = [];
   const add = (controller, name) => {
     controllers.push(controller);
-    controller.domElement.dataset.lightingControl = name;
+    controller.domElement.dataset.sceneControl = name;
     return controller;
   };
   const refresh = () => { controllers.forEach((controller) => controller.updateDisplay()); renderOnce(); };
   const updateKey = () => { applyKey(); renderOnce(); };
   const updateFill = () => { applyFill(); renderOnce(); };
   const updateExposure = () => { applyExposure(); renderOnce(); };
+  const updateFloor = () => { applyFloor(); refresh(); };
 
   add(gui.add(lighting, 'exposure', .1, 2, .01).name('Exposure').onChange(updateExposure), 'exposure');
   const key = gui.addFolder('Key');
@@ -35,22 +46,33 @@ export function createLightingControls({ GUI, lighting, applyKey, applyFill, app
   add(fill.add(lighting.fill, 'height', .1, 4, .01).name('Height scale').onChange(updateFill), 'fill-height');
   fill.close();
 
+  const floorFolder = gui.addFolder('Floor');
+  add(floorFolder.addColor(floor, 'baseColor').name('Base color').onChange(updateFloor), 'floor-base-color');
+  add(floorFolder.add(floor, 'reflectionStrength', 0, 1, .01).name('Reflection strength').onChange(updateFloor), 'floor-reflection-strength');
+  add(floorFolder.add(floor, 'opacity', 0, 1, .01).name('Opacity').onChange(updateFloor), 'floor-opacity');
+  add(floorFolder.add(floor, 'radialFadeStart', 0, floor.radialFadeLimit, .01).name('Radial fade start').onChange(updateFloor), 'floor-radial-fade-start');
+  add(floorFolder.add(floor, 'radialFadeEnd', 0, floor.radialFadeLimit, .01).name('Radial fade end').onChange(updateFloor), 'floor-radial-fade-end');
+  add(floorFolder.add(floor, 'screenEdgeFade', .001, .35, .001).name('Screen edge fade').onChange(updateFloor), 'floor-screen-edge-fade');
+  floorFolder.close();
+
   const actions = {
     reset() {
-      lighting.exposure = initial.exposure;
-      const { position, ...keyDefaults } = initial.key;
+      lighting.exposure = initial.lighting.exposure;
+      const { position, ...keyDefaults } = initial.lighting.key;
       Object.assign(lighting.key, keyDefaults);
       Object.assign(lighting.key.position, position);
-      const { position: fillPosition, ...fillDefaults } = initial.fill;
+      const { position: fillPosition, ...fillDefaults } = initial.lighting.fill;
       Object.assign(lighting.fill, fillDefaults);
       Object.assign(lighting.fill.position, fillPosition);
+      Object.assign(floor, initial.floor);
       applyKey();
       applyFill();
       applyExposure();
+      applyFloor();
       refresh();
     },
     logSettings() {
-      console.log(JSON.stringify(lighting, null, 2));
+      console.log(JSON.stringify({ lighting, floor }, null, 2));
     },
   };
   add(gui.add(actions, 'reset').name('Reset'), 'reset');

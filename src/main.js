@@ -202,16 +202,27 @@ async function start() {
   studioSpot("#ff6d2e", 650, 1.08, 0.9, -1.6, 0.74, 0.9);
   studioSpot("#ff6d2e", 210, 0.95, -0.2, -1.25, 0.62, 0.92);
   const floorViewport = new THREE.Vector2();
+  const floor = {
+    baseColor: "#050504",
+    reflectionStrength: 0.18,
+    opacity: 0.32,
+    radialFadeStart: scale * 0.55,
+    radialFadeEnd: scale * 1.65,
+    radialFadeLimit: scale * 3,
+    screenEdgeFade: 0.1,
+  };
   const floorReflectionShader = {
     uniforms: {
       color: { value: null },
       tDiffuse: { value: null },
       textureMatrix: { value: null },
       floorCenter: { value: new THREE.Vector2(center.x, center.z) },
-      floorFadeStart: { value: scale * 0.55 },
-      floorFadeEnd: { value: scale * 1.65 },
+      floorFadeStart: { value: floor.radialFadeStart },
+      floorFadeEnd: { value: floor.radialFadeEnd },
       floorViewport: { value: floorViewport },
-      floorOpacity: { value: 0.32 },
+      floorOpacity: { value: floor.opacity },
+      reflectionStrength: { value: floor.reflectionStrength },
+      screenEdgeFade: { value: floor.screenEdgeFade },
       reflectionTexel: { value: new THREE.Vector2(1 / 512, 1 / 512) },
     },
     vertexShader: `
@@ -237,6 +248,8 @@ async function start() {
       uniform float floorFadeEnd;
       uniform vec2 floorViewport;
       uniform float floorOpacity;
+      uniform float reflectionStrength;
+      uniform float screenEdgeFade;
       uniform vec2 reflectionTexel;
       varying vec4 vUv;
       varying vec3 floorWorldPosition;
@@ -264,10 +277,10 @@ async function start() {
         float floorDistance = length( floorWorldPosition.xz - floorCenter );
         float radialFade = 1.0 - smoothstep( floorFadeStart, floorFadeEnd, floorDistance );
         vec2 floorEdgeDistance = min( gl_FragCoord.xy, floorViewport - gl_FragCoord.xy );
-        vec2 floorScreenFade = smoothstep( vec2( 0.0 ), floorViewport * 0.10, floorEdgeDistance );
+        vec2 floorScreenFade = smoothstep( vec2( 0.0 ), floorViewport * screenEdgeFade, floorEdgeDistance );
         float floorFade = radialFade * floorScreenFade.x * floorScreenFade.y;
 
-        gl_FragColor = vec4( color + reflection.rgb * 0.18, floorOpacity * floorFade );
+        gl_FragColor = vec4( color + reflection.rgb * reflectionStrength, floorOpacity * floorFade );
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }
@@ -276,7 +289,7 @@ async function start() {
   const ground = new Reflector(
     new THREE.PlaneGeometry(scale * 500, scale * 500),
     {
-      color: "#050504",
+      color: floor.baseColor,
       textureWidth: 512,
       textureHeight: 512,
       clipBias: 0.002,
@@ -290,6 +303,25 @@ async function start() {
   ground.visible = !wireframe;
   ground.material.transparent = true;
   ground.material.depthWrite = false;
+  function applyFloor() {
+    const minimumFadeGap = Math.max(scale * 0.01, 0.01);
+    floor.radialFadeStart = Math.min(
+      floor.radialFadeStart,
+      floor.radialFadeLimit - minimumFadeGap,
+    );
+    floor.radialFadeEnd = Math.max(
+      floor.radialFadeEnd,
+      floor.radialFadeStart + minimumFadeGap,
+    );
+    floor.radialFadeEnd = Math.min(floor.radialFadeEnd, floor.radialFadeLimit);
+    const uniforms = ground.material.uniforms;
+    uniforms.color.value.set(floor.baseColor);
+    uniforms.reflectionStrength.value = floor.reflectionStrength;
+    uniforms.floorOpacity.value = floor.opacity;
+    uniforms.floorFadeStart.value = floor.radialFadeStart;
+    uniforms.floorFadeEnd.value = floor.radialFadeEnd;
+    uniforms.screenEdgeFade.value = floor.screenEdgeFade;
+  }
   const renderFloorReflection = ground.onBeforeRender;
   ground.onBeforeRender = (renderer, ...renderArgs) => {
     renderer.getDrawingBufferSize(ground.material.uniforms.floorViewport.value);
@@ -380,19 +412,21 @@ async function start() {
     restart();
   });
   if (import.meta.env.DEV) {
-    const [{ createLightingControls }, { default: GUI }] = await Promise.all([
-      import("./lighting-controls.js"),
+    const [{ createSceneControls }, { default: GUI }] = await Promise.all([
+      import("./scene-controls.js"),
       import("three/addons/libs/lil-gui.module.min.js"),
     ]);
-    const disposeLightingControls = createLightingControls({
+    const disposeSceneControls = createSceneControls({
       GUI,
       lighting,
+      floor,
       applyKey,
       applyFill,
       applyExposure,
+      applyFloor,
       renderOnce,
     });
-    import.meta.hot?.dispose(disposeLightingControls);
+    import.meta.hot?.dispose(disposeSceneControls);
   }
   resize();
   render();
