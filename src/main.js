@@ -115,6 +115,18 @@ async function start() {
         z: 1.63,
       },
     },
+    rim: {
+      enabled: true,
+      color: "#ff824d",
+      intensity: 169,
+      position: {
+        x: 0,
+        y: -0.25,
+        z: -0.54,
+      },
+      angle: 1.08,
+      penumbra: 0.69,
+    },
   };
   function aim(light, x, y, z) {
     light.position.set(
@@ -168,6 +180,17 @@ async function start() {
     lighting.fill.position.y,
     lighting.fill.position.z,
   );
+  // A single rear, viewer-right rim isolates the silhouette without reaching
+  // the broad frontal planes.
+  const rimLight = studioSpot(
+    lighting.rim.color,
+    lighting.rim.intensity,
+    lighting.rim.position.x,
+    lighting.rim.position.y,
+    lighting.rim.position.z,
+    lighting.rim.angle,
+    lighting.rim.penumbra,
+  );
   function applyKey() {
     keyLight.visible = lighting.key.enabled;
     keyLight.color.set(lighting.key.color);
@@ -194,13 +217,30 @@ async function start() {
     );
     fillLight.lookAt(center);
   }
+  function applyRim() {
+    rimLight.visible = lighting.rim.enabled;
+    rimLight.color.set(lighting.rim.color);
+    rimLight.intensity = lighting.rim.intensity;
+    rimLight.angle = lighting.rim.angle;
+    rimLight.penumbra = lighting.rim.penumbra;
+    rimLight.position.set(
+      center.x + lighting.rim.position.x * scale,
+      center.y + lighting.rim.position.y * scale,
+      center.z + lighting.rim.position.z * scale,
+    );
+    rimLight.target.position.copy(center);
+    rimLight.target.updateMatrixWorld();
+  }
   function applyExposure() {
     renderer.toneMappingExposure = lighting.exposure;
   }
   studioSpot("#fff1df", 480, -0.72, 1.18, 1.25, 0.72, 0.9);
   studioSpot("#ddd9d2", 155, 0.2, 0.55, 1.7, 0.72, 0.9);
-  studioSpot("#ff6d2e", 650, 1.08, 0.9, -1.6, 0.74, 0.9);
   studioSpot("#ff6d2e", 210, 0.95, -0.2, -1.25, 0.62, 0.92);
+  applyKey();
+  applyFill();
+  applyRim();
+  applyExposure();
   const floorViewport = new THREE.Vector2();
   const floor = {
     baseColor: "#050504",
@@ -335,9 +375,10 @@ async function start() {
   function resize() {
     const { width, height } = host.getBoundingClientRect();
     if (!width || !height) return;
-    const sceneExtension = Number.parseFloat(
-      getComputedStyle(host).getPropertyValue("--scene-extension"),
-    ) || 0;
+    const sceneExtension =
+      Number.parseFloat(
+        getComputedStyle(host).getPropertyValue("--scene-extension"),
+      ) || 0;
     const framingHeight = Math.max(height - sceneExtension, 1);
     renderer.setSize(width, height, false);
     camera.clearViewOffset();
@@ -429,11 +470,26 @@ async function start() {
       floor,
       applyKey,
       applyFill,
+      applyRim,
       applyExposure,
       applyFloor,
       renderOnce,
     });
-    import.meta.hot?.dispose(disposeSceneControls);
+    const sceneApi = {
+      lighting,
+      floor,
+      applyKey,
+      applyFill,
+      applyRim,
+      applyExposure,
+      applyFloor,
+      renderOnce,
+    };
+    window.__strnkScene = sceneApi;
+    import.meta.hot?.dispose(() => {
+      disposeSceneControls();
+      if (window.__strnkScene === sceneApi) delete window.__strnkScene;
+    });
   }
   resize();
   render();

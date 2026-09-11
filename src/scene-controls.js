@@ -4,6 +4,7 @@ export function createSceneControls({
   floor,
   applyKey,
   applyFill,
+  applyRim,
   applyExposure,
   applyFloor,
   renderOnce,
@@ -20,6 +21,7 @@ export function createSceneControls({
   const refresh = () => { controllers.forEach((controller) => controller.updateDisplay()); renderOnce(); };
   const updateKey = () => { applyKey(); renderOnce(); };
   const updateFill = () => { applyFill(); renderOnce(); };
+  const updateRim = () => { applyRim(); renderOnce(); };
   const updateExposure = () => { applyExposure(); renderOnce(); };
   const updateFloor = () => { applyFloor(); refresh(); };
 
@@ -46,6 +48,17 @@ export function createSceneControls({
   add(fill.add(lighting.fill, 'height', .1, 4, .01).name('Height scale').onChange(updateFill), 'fill-height');
   fill.close();
 
+  const rim = gui.addFolder('Rim');
+  add(rim.add(lighting.rim, 'enabled').name('Enabled').onChange(updateRim), 'rim-enabled');
+  add(rim.add(lighting.rim, 'intensity', 0, 1000, 1).name('Intensity').onChange(updateRim), 'rim-intensity');
+  add(rim.addColor(lighting.rim, 'color').name('Color').onChange(updateRim), 'rim-color');
+  add(rim.add(lighting.rim.position, 'x', -3, 3, .01).name('X scale').onChange(updateRim), 'rim-x');
+  add(rim.add(lighting.rim.position, 'y', -3, 3, .01).name('Y scale').onChange(updateRim), 'rim-y');
+  add(rim.add(lighting.rim.position, 'z', -3, 3, .01).name('Z scale').onChange(updateRim), 'rim-z');
+  add(rim.add(lighting.rim, 'angle', .05, Math.PI / 2, .01).name('Angle').onChange(updateRim), 'rim-angle');
+  add(rim.add(lighting.rim, 'penumbra', 0, 1, .01).name('Penumbra').onChange(updateRim), 'rim-penumbra');
+  rim.close();
+
   const floorFolder = gui.addFolder('Floor');
   add(floorFolder.addColor(floor, 'baseColor').name('Base color').onChange(updateFloor), 'floor-base-color');
   add(floorFolder.add(floor, 'reflectionStrength', 0, 1, .01).name('Reflection strength').onChange(updateFloor), 'floor-reflection-strength');
@@ -64,9 +77,13 @@ export function createSceneControls({
       const { position: fillPosition, ...fillDefaults } = initial.lighting.fill;
       Object.assign(lighting.fill, fillDefaults);
       Object.assign(lighting.fill.position, fillPosition);
+      const { position: rimPosition, ...rimDefaults } = initial.lighting.rim;
+      Object.assign(lighting.rim, rimDefaults);
+      Object.assign(lighting.rim.position, rimPosition);
       Object.assign(floor, initial.floor);
       applyKey();
       applyFill();
+      applyRim();
       applyExposure();
       applyFloor();
       refresh();
