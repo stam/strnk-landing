@@ -110,7 +110,7 @@ async function start() {
       height: 1.7,
       position: {
         x: -1.48,
-        y: -0.69,s
+        y: -0.69,
         z: 1.63,
       },
     },
