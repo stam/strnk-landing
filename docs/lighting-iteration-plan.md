@@ -18,24 +18,6 @@ Work through the steps in order. Change **one lighting subsystem per iteration**
 
 > Match the concept's base darkness. Disable orange/rim lighting, bloom, AO and unnecessary ambient lighting. Keep only one neutral key. Adjust only renderer tone mapping, exposure and the mascot's base material value. The mascot should read as dark charcoal / charred wood rather than tan or beige. Do not change light placement yet. Render one screenshot at the existing camera and viewport, then stop.
 
-### Suggested renderer baseline
-
-```ts
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.75;
-```
-
-Example material starting point:
-
-```ts
-new THREE.MeshStandardMaterial({
-  color: 0x24211f,
-  roughness: 0.8,
-  metalness: 0,
-});
-```
-
 ### Reviewer checklist
 
 Approve when:

@@ -1,0 +1,64 @@
+export function createLightingControls({ GUI, lighting, applyKey, applyFill, applyExposure, renderOnce }) {
+  const initial = JSON.parse(JSON.stringify(lighting));
+  const gui = new GUI({ title: 'Lighting', width: 248, closeFolders: true });
+  const controllers = [];
+  const add = (controller, name) => {
+    controllers.push(controller);
+    controller.domElement.dataset.lightingControl = name;
+    return controller;
+  };
+  const refresh = () => { controllers.forEach((controller) => controller.updateDisplay()); renderOnce(); };
+  const updateKey = () => { applyKey(); renderOnce(); };
+  const updateFill = () => { applyFill(); renderOnce(); };
+  const updateExposure = () => { applyExposure(); renderOnce(); };
+
+  add(gui.add(lighting, 'exposure', .1, 2, .01).name('Exposure').onChange(updateExposure), 'exposure');
+  const key = gui.addFolder('Key');
+  add(key.add(lighting.key, 'enabled').name('Enabled').onChange(updateKey), 'key-enabled');
+  add(key.add(lighting.key, 'intensity', 0, 100, .1).name('Intensity').onChange(updateKey), 'key-intensity');
+  add(key.addColor(lighting.key, 'color').name('Color').onChange(updateKey), 'key-color');
+  add(key.add(lighting.key.position, 'x', -3, 3, .01).name('X scale').onChange(updateKey), 'key-x');
+  add(key.add(lighting.key.position, 'y', -3, 3, .01).name('Y scale').onChange(updateKey), 'key-y');
+  add(key.add(lighting.key.position, 'z', -3, 3, .01).name('Z scale').onChange(updateKey), 'key-z');
+  add(key.add(lighting.key, 'width', .1, 4, .01).name('Width scale').onChange(updateKey), 'key-width');
+  add(key.add(lighting.key, 'height', .1, 4, .01).name('Height scale').onChange(updateKey), 'key-height');
+  key.close();
+
+  const fill = gui.addFolder('Fill');
+  add(fill.add(lighting.fill, 'enabled').name('Enabled').onChange(updateFill), 'fill-enabled');
+  add(fill.add(lighting.fill, 'intensity', 0, 25, .01).name('Intensity').onChange(updateFill), 'fill-intensity');
+  add(fill.addColor(lighting.fill, 'color').name('Color').onChange(updateFill), 'fill-color');
+  add(fill.add(lighting.fill.position, 'x', -3, 3, .01).name('X scale').onChange(updateFill), 'fill-x');
+  add(fill.add(lighting.fill.position, 'y', -3, 3, .01).name('Y scale').onChange(updateFill), 'fill-y');
+  add(fill.add(lighting.fill.position, 'z', -3, 3, .01).name('Z scale').onChange(updateFill), 'fill-z');
+  add(fill.add(lighting.fill, 'width', .1, 4, .01).name('Width scale').onChange(updateFill), 'fill-width');
+  add(fill.add(lighting.fill, 'height', .1, 4, .01).name('Height scale').onChange(updateFill), 'fill-height');
+  fill.close();
+
+  const actions = {
+    reset() {
+      lighting.exposure = initial.exposure;
+      const { position, ...keyDefaults } = initial.key;
+      Object.assign(lighting.key, keyDefaults);
+      Object.assign(lighting.key.position, position);
+      const { position: fillPosition, ...fillDefaults } = initial.fill;
+      Object.assign(lighting.fill, fillDefaults);
+      Object.assign(lighting.fill.position, fillPosition);
+      applyKey();
+      applyFill();
+      applyExposure();
+      refresh();
+    },
+    logSettings() {
+      console.log(JSON.stringify(lighting, null, 2));
+    },
+  };
+  add(gui.add(actions, 'reset').name('Reset'), 'reset');
+  add(gui.add(actions, 'logSettings').name('Log settings'), 'log-settings');
+
+  for (const event of ['pointerdown', 'pointermove', 'pointerup', 'pointerleave']) {
+    gui.domElement.addEventListener(event, (pointerEvent) => pointerEvent.stopPropagation());
+  }
+
+  return () => gui.destroy();
+}
