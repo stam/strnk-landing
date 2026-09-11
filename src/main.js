@@ -50,8 +50,9 @@ async function start() {
     scene.add(light, light.target);
     return light;
   }
-  const key = studioLight('#fff0db', 5.5, -.65, 1.2, 1);
+  const key = studioLight('#fff0db', 9, -.65, 1.2, 1);
   studioLight('#bdcbe0', 1.2, .7, .3, 1);
+  studioLight('#dec4ab', 2.1, -.2, .35, 1.35);
   const rim = studioLight('#ff732d', 8, .95, .45, -.35);
   studioLight('#ffad6a', 1.6, -.8, .25, -.4);
   for (const light of [key, rim]) {

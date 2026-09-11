@@ -12,6 +12,8 @@ The first viewport pairs STRNK / “Powerful software” on the left with a musc
 ## Material and lighting
 
 - Charcoal/dark brown, very rough, with little or no detailed bark texture. Geometry provides most surface detail.
+- Let form and light lead: use only extremely subtle large-scale wood variation and slight per-face colour variation. Optional vertical grain must be broad and faint; omit tiny bark detail and gritty normal/bump textures.
+- Reveal polygon planes through flat shading or controlled split normals, never painted triangle outlines or high-contrast random face colours.
 - Neutral/warm key from upper-left, soft fill to keep shadow faces readable, and an orange rim/backlight primarily describing the silhouette.
 - Background near `#10100f`. The mascot must remain readable at normal laptop brightness.
 
