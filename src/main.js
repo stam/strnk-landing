@@ -84,7 +84,7 @@ async function start() {
     return light;
   }
   // Step-one baseline: one neutral key only. Fill, rim, ambient and AO stay off.
-  aim(new THREE.RectAreaLight('#ffffff', 28, scale * 1.45, scale * 1.15), -.72, 1.18, 1.25);
+  aim(new THREE.RectAreaLight('#ffffff', 28, scale * 1.6, scale * 1.3), -1.25, 1.42, .62);
   studioSpot('#fff1df', 480, -.72, 1.18, 1.25, .72, .9);
   studioSpot('#ddd9d2', 155, .2, .55, 1.7, .72, .9);
   studioSpot('#ff6d2e', 650, 1.08, .9, -1.6, .74, .9);
