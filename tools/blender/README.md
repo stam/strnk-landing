@@ -24,9 +24,9 @@ result = runpy.run_path(
 )['result']
 ```
 
-Substitute `render_preview.py` or `export_web.py` for subsequent steps. The same snippet works in Blender's Python Console. For background Blender Python, from the repository root (with Blender on PATH):
+Substitute `render_preview.py` or `export_web.py` for subsequent steps. The same snippet works in Blender's Python Console. For background Blender Python, from PowerShell at the repository root (with Blender on PATH):
 
-```bat
+```powershell
 blender --background assets/mascot.blend --scene "STRNK Concept" --python-exit-code 1 --python tools/blender/scene_report.py
 blender --background assets/mascot.blend --scene "STRNK Concept" --python-exit-code 1 --python tools/blender/render_preview.py
 blender --background assets/mascot.blend --scene "STRNK Concept" --python-exit-code 1 --python tools/blender/export_web.py
@@ -44,15 +44,15 @@ Background commands read the saved file; use MCP or the console to review unsave
 
 ## Web loop
 
-1. Start `yarn dev` in Cmder and use the URL Vite reports.
+1. Start `yarn.cmd dev` in PowerShell and use the URL Vite reports. (`yarn` also works when PowerShell permits the installed `yarn.ps1` shim.)
 2. Capture browser reviews with the reusable helper (requires `uvx` and installed Microsoft Edge):
 
-   ```bat
+   ```powershell
    uvx --python 3.11 --from playwright python tools/web/capture_preview.py http://127.0.0.1:5173/
    ```
 
    It writes PNGs to `.tmp/web/`, waits for `.scene.ready` and fonts, and fails for page errors or horizontal overflow.
 3. Inspect desktop/mobile solid and wireframe PNGs, plus front and elevated side views. Check composition, silhouette, lighting, clipping, and small-screen fit. Debug URLs `?camera=front`, `?camera=side`, and `?view=wireframe` work only in development.
-4. Adjust web layout/lighting directly; return to the model loop for geometry changes. Recapture and inspect after adjustments, then run `yarn build`.
+4. Adjust web layout/lighting directly; return to the model loop for geometry changes. Recapture and inspect after adjustments, then run `yarn.cmd build`.
 
 Generated files under `.tmp/` are ignored and replaceable. Historical experiments and reviews are archived under `.tmp/archive/`; they are not required for this workflow. Keep future one-off scripts in `.tmp/blender/`, and promote reusable operations into `tools/`.
