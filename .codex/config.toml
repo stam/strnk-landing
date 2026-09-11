@@ -1,0 +1,5 @@
+[agents]
+# One execution worker at a time protects the shared .blend and frontend worktree.
+max_concurrent_threads_per_session = 2
+# Avoid injecting interruption notices into narrowly scoped child contexts.
+interrupt_message = false

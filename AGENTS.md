@@ -1,6 +1,13 @@
 # Repository instructions
 
-- Before visual work, read [the art direction](docs/mascot-art-direction.md) and inspect `strnk-logo.svg` and `assets/strnk-concept.png`. Preserve user reference files.
+## Delegated visual-work orchestration
+
+- Use the project-scoped agents in `.codex/agents/` for mascot and landing-page delegation. The root/orchestrator owns the full conversation and must spawn children with `fork_turns="none"`.
+- Give `art-director` only the user request and visual references; give `visual-critic` only the art brief and final PNGs. Never give either Blender MCP transcripts, terminal/debug output, source code, or exploratory progress captures.
+- Give `blender-operator` and `web-developer` only one focused work order plus the relevant excerpt of the approved art brief. The art director owns aesthetic changes; an execution agent must not reinterpret the visual target.
+- Run Blender and web execution sequentially, never concurrently. A visual critic may request at most three image-visible corrections; stop after two revise cycles unless the user authorizes further polishing.
+
+- Before visual changes, read [the art direction](docs/mascot-art-direction.md) and inspect `strnk-logo.svg` and `assets/strnk-concept.png`. Preserve user reference files.
 - Follow [the Blender and web review loop](tools/blender/README.md). Actually inspect the resulting PNGs; successful scripts or manifold geometry do not establish visual quality.
 - Keep reusable automation in `tools/`; generated reviews and one-off experiments belong in ignored `.tmp/`. The `.blend` is the editable source of truth.
 
