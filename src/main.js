@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 import { createContour } from './contour.js';
 import './style.css';
 
@@ -14,8 +15,10 @@ async function start() {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setClearColor(0x000000, 0);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.25;
+  renderer.toneMappingExposure = 1.08;
+  RectAreaLightUniformsLib.init();
   renderer.shadowMap.enabled = !wireframe;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
@@ -27,9 +30,30 @@ async function start() {
   const meshes = [];
   const contours = [];
   mascot.traverse((object) => { if (object.isMesh) meshes.push(object); });
+  const charcoal = new THREE.Color('#302923');
+  function studioMaterial(source) {
+    if (!source?.isMeshStandardMaterial) return source;
+    const material = source.clone();
+    // The GLB uses COLOR_0 for its earlier brown/red palette.  Keep the asset
+    // untouched, but disable that baked vertex tint in this studio treatment.
+    material.vertexColors = false;
+    material.color.copy(charcoal);
+    material.roughness = Math.max(material.roughness ?? .8, .84);
+    material.metalness = 0;
+    material.envMapIntensity = .18;
+    if (material.emissive) material.emissive.set(0x000000);
+    material.emissiveIntensity = 0;
+    material.needsUpdate = true;
+    return material;
+  }
   for (const object of meshes) {
     object.castShadow = true;
     object.receiveShadow = true;
+    // The exported palettes remain intact; this only gives their rough wood a
+    // common charcoal studio response under the site lights.
+    if (!wireframe) object.material = Array.isArray(object.material)
+      ? object.material.map(studioMaterial)
+      : studioMaterial(object.material);
     if (wireframe) {
       object.material = fill;
       const edgeAngle = object.name.toLowerCase().includes('fist') ? 22 : 10;
@@ -42,20 +66,28 @@ async function start() {
   const center = bounds.getCenter(new THREE.Vector3());
   const size = bounds.getSize(new THREE.Vector3());
   const scale = Math.max(size.x, size.y, size.z);
-  scene.add(new THREE.HemisphereLight('#d8deed', '#24170f', .7));
-  function studioLight(color, intensity, x, y, z) {
-    const light = new THREE.DirectionalLight(color, intensity);
+  scene.add(new THREE.HemisphereLight('#b6b4ae', '#151412', .56));
+  function aim(light, x, y, z) {
+    light.position.set(center.x + x * scale, center.y + y * scale, center.z + z * scale);
+    light.lookAt(center);
+    scene.add(light);
+    return light;
+  }
+  function studioSpot(color, intensity, x, y, z, angle, penumbra) {
+    const light = new THREE.SpotLight(color, intensity, scale * 6, angle, penumbra, 2);
     light.position.set(center.x + x * scale, center.y + y * scale, center.z + z * scale);
     light.target.position.copy(center);
     scene.add(light, light.target);
     return light;
   }
-  const key = studioLight('#fff0db', 9, -.65, 1.2, 1);
-  studioLight('#bdcbe0', 1.2, .7, .3, 1);
-  studioLight('#dec4ab', 2.1, -.2, .35, 1.35);
-  const rim = studioLight('#ff732d', 8, .95, .45, -.35);
-  studioLight('#ffad6a', 1.6, -.8, .25, -.4);
-  for (const light of [key, rim]) {
+  // A broad front-left area key reveals the low-poly planes without bleaching
+  // the charcoal.  The narrow rear spots keep orange off the front faces.
+  const key = aim(new THREE.RectAreaLight('#fff1df', 28, scale * 1.45, scale * 1.15), -.72, 1.18, 1.25);
+  const keyShadow = studioSpot('#fff1df', 480, -.72, 1.18, 1.25, .72, .9);
+  studioSpot('#ddd9d2', 155, .2, .55, 1.7, .72, .9);
+  const rim = studioSpot('#ff6d2e', 650, 1.08, .9, -1.6, .74, .9);
+  studioSpot('#ff6d2e', 210, .95, -.2, -1.25, .62, .92);
+  for (const light of [keyShadow, rim]) {
     light.castShadow = true;
     light.shadow.mapSize.set(2048, 2048);
     Object.assign(light.shadow.camera, { left: -scale, right: scale, top: scale, bottom: -scale, near: .1, far: scale * 5 });
@@ -63,12 +95,28 @@ async function start() {
     light.shadow.bias = -.0001;
     light.shadow.radius = 3;
   }
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(scale * 20, scale * 20), new THREE.ShadowMaterial({ opacity: .14 }));
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(scale * 200, scale * 200),
+    new THREE.MeshPhysicalMaterial({ color: '#070605', roughness: .94, metalness: 0, clearcoat: .04, clearcoatRoughness: 1, reflectivity: .12, envMapIntensity: .055 }),
+  );
   ground.rotation.x = -Math.PI / 2;
   ground.position.set(center.x, bounds.min.y - .015, center.z);
   ground.receiveShadow = true;
   ground.visible = !wireframe;
   scene.add(ground);
+  // A one-time local PMREM probe gives the rough floor only a muted, blurred
+  // reflection of the sculpture; it avoids inventing an HDR studio backdrop.
+  if (!wireframe) {
+    const reflectionTarget = new THREE.WebGLCubeRenderTarget(128);
+    const reflectionProbe = new THREE.CubeCamera(.1, scale * 8, reflectionTarget);
+    reflectionProbe.position.set(center.x, bounds.min.y + .04, center.z + scale * .08);
+    ground.visible = false;
+    reflectionProbe.update(renderer, scene);
+    ground.visible = true;
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    ground.material.envMap = pmrem.fromCubemap(reflectionTarget.texture).texture;
+    ground.material.needsUpdate = true;
+  }
   let pointerX = 0, pointerY = 0, frame;
 
   function resize() {

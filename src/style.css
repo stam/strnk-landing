@@ -5,7 +5,7 @@
 html { scroll-behavior: smooth; }
 body { margin: 0; }
 a { color: inherit; }
-.page { position: relative; isolation: isolate; min-height: 100svh; padding: 0 5.2%; overflow: hidden; background: radial-gradient(ellipse at 65% 61%, #26221c70, transparent 46%), #111110; }
+.page { position: relative; isolation: isolate; min-height: 100svh; padding: 0 5.2%; overflow: hidden; background: radial-gradient(ellipse at 67% 62%, #1d1b18a6, transparent 46%), #10100f; }
 .header, .footer { display: flex; align-items: center; justify-content: space-between; }
 .header { position: relative; z-index: 2; height: 88px; gap: 24px; }
 .brand { font-family: 'Barlow Condensed', Impact, sans-serif; text-decoration: none; font-size: 34px; font-weight: 900; letter-spacing: -1.2px; }
@@ -21,8 +21,8 @@ h1 { width: fit-content; font-family: 'Barlow Condensed', Impact, 'Arial Narrow'
 .subtitle { font-size: clamp(30px, 4.2vw, 56px); margin: 0; letter-spacing: -.055em; font-weight: 500; line-height: 1.15; }
 .description { font-size: clamp(15px, 1.7vw, 21px); line-height: 1.4; color: #94928c; margin: 13px 0 25px; }
 .scene { position: absolute; width: 78%; height: 62%; right: 0; bottom: 0; }
-.scene::before { content: ''; position: absolute; left: 18%; right: 13%; bottom: 6%; height: 8%; border-radius: 50%; background: #0009; filter: blur(16px); }
-.scene-glow { position: absolute; inset: 14% 3% 0; background: radial-gradient(ellipse at 64% 70%, #a6582117, transparent 65%); }
+.scene::before { content: ''; position: absolute; left: 18%; right: 13%; bottom: 6%; height: 8%; border-radius: 50%; background: #0505048c; filter: blur(24px); }
+.scene-glow { position: absolute; inset: 14% 3% 0; background: radial-gradient(ellipse at 63% 61%, #211f1b91, transparent 56%), radial-gradient(ellipse at 68% 83%, #7b351312, transparent 42%); }
 #mascot { display: block; width: 100%; height: 100%; position: relative; opacity: 0; transition: opacity .6s; }
 .scene.ready #mascot { opacity: 1; }
 .fallback { position: absolute; width: 100%; height: 100%; object-fit: contain; filter: invert(85%); }
