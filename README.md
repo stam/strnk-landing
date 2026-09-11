@@ -17,7 +17,7 @@ Deploy `dist/` to static hosting. No backend is required. Fonts currently load f
 
 ## Files
 
-- `src/main.js`: GLB loading, monochrome edges, camera, pointer movement, and reduced-motion handling.
+- `src/main.js`: GLB loading, studio lighting and shadows, camera, pointer movement, and reduced-motion handling.
 - `src/contour.js`: view-dependent silhouette lines, preserving outlines when minor edges are filtered out.
 - `src/style.css` and `index.html`: responsive first viewport.
 - `assets/mascot.blend`: editable Blender source; `public/models/mascot.glb`: website export.
@@ -36,7 +36,9 @@ Inspect the active scene before running scripts. `scripts/export-mascot.py` vali
 
 The active model is in **STRNK Concept**. Earlier `STRNK` and `STRNK v2` scenes remain in the Blender file. Oak color and normal textures are packed into the `.blend` and GLB, with editable PNG copies in `assets/textures/`.
 
-The concept scene includes a low camera, studio lights and ground for review. Only meshes tagged `mascot_export` are exported, excluding the studio. The website currently renders the geometry in its wireframe style.
+The concept scene includes a low camera, studio lights and ground for review. Only meshes tagged `mascot_export` are exported, excluding the studio. The website uses the exported materials with a soft studio key, orange rim lighting, and a shadow-catching ground. Layout and website lighting can be adjusted without changing the Blender file or GLB.
+
+For visual review in the Vite development server, use `?camera=front`, `?camera=side` (elevated), or `?view=wireframe`. The default camera uses a low front viewpoint. These review parameters are ignored in production builds.
 
 Use the Blender MCP connection for live edits. Keep one-off modeling commands, diagnostics and review renders under ignored `.tmp/blender-work/`, not in the source tree. The `.blend` is the editable source of truth; generation scripts are not required to build or run the site.
 
