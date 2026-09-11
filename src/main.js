@@ -204,8 +204,8 @@ async function start() {
   const floorViewport = new THREE.Vector2();
   const floor = {
     baseColor: "#050504",
-    reflectionStrength: 0.18,
-    opacity: 0.32,
+    reflectionStrength: 0.69,
+    opacity: 0.49,
     radialFadeStart: scale * 0.55,
     radialFadeEnd: scale * 1.65,
     radialFadeLimit: scale * 3,
@@ -335,8 +335,13 @@ async function start() {
   function resize() {
     const { width, height } = host.getBoundingClientRect();
     if (!width || !height) return;
+    const sceneExtension = Number.parseFloat(
+      getComputedStyle(host).getPropertyValue("--scene-extension"),
+    ) || 0;
+    const framingHeight = Math.max(height - sceneExtension, 1);
     renderer.setSize(width, height, false);
-    camera.aspect = width / height;
+    camera.clearViewOffset();
+    camera.aspect = width / framingHeight;
     const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
     const distance =
       Math.max(
@@ -358,6 +363,8 @@ async function start() {
         center.z + distance * 0.8,
       );
     camera.lookAt(center);
+    if (sceneExtension)
+      camera.setViewOffset(width, framingHeight, 0, 0, width, height);
     camera.updateProjectionMatrix();
     mascot.updateMatrixWorld(true);
     contours.forEach((update) => update(camera));
