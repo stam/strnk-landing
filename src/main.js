@@ -17,7 +17,7 @@ async function start() {
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.08;
+  renderer.toneMappingExposure = 0.65;
   RectAreaLightUniformsLib.init();
   renderer.shadowMap.enabled = !wireframe;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -30,7 +30,7 @@ async function start() {
   const meshes = [];
   const contours = [];
   mascot.traverse((object) => { if (object.isMesh) meshes.push(object); });
-  const charcoal = new THREE.Color('#302923');
+  const charcoal = new THREE.Color('#1b1918');
   function studioMaterial(source) {
     if (!source?.isMeshStandardMaterial) return source;
     const material = source.clone();
@@ -66,7 +66,9 @@ async function start() {
   const center = bounds.getCenter(new THREE.Vector3());
   const size = bounds.getSize(new THREE.Vector3());
   const scale = Math.max(size.x, size.y, size.z);
-  scene.add(new THREE.HemisphereLight('#b6b4ae', '#151412', .56));
+  const ambient = new THREE.HemisphereLight('#d6d5d0', '#151412', .56);
+  ambient.visible = false;
+  scene.add(ambient);
   function aim(light, x, y, z) {
     light.position.set(center.x + x * scale, center.y + y * scale, center.z + z * scale);
     light.lookAt(center);
@@ -78,23 +80,15 @@ async function start() {
     light.position.set(center.x + x * scale, center.y + y * scale, center.z + z * scale);
     light.target.position.copy(center);
     scene.add(light, light.target);
+    light.visible = false;
     return light;
   }
-  // A broad front-left area key reveals the low-poly planes without bleaching
-  // the charcoal.  The narrow rear spots keep orange off the front faces.
-  const key = aim(new THREE.RectAreaLight('#fff1df', 28, scale * 1.45, scale * 1.15), -.72, 1.18, 1.25);
-  const keyShadow = studioSpot('#fff1df', 480, -.72, 1.18, 1.25, .72, .9);
+  // Step-one baseline: one neutral key only. Fill, rim, ambient and AO stay off.
+  aim(new THREE.RectAreaLight('#ffffff', 28, scale * 1.45, scale * 1.15), -.72, 1.18, 1.25);
+  studioSpot('#fff1df', 480, -.72, 1.18, 1.25, .72, .9);
   studioSpot('#ddd9d2', 155, .2, .55, 1.7, .72, .9);
-  const rim = studioSpot('#ff6d2e', 650, 1.08, .9, -1.6, .74, .9);
+  studioSpot('#ff6d2e', 650, 1.08, .9, -1.6, .74, .9);
   studioSpot('#ff6d2e', 210, .95, -.2, -1.25, .62, .92);
-  for (const light of [keyShadow, rim]) {
-    light.castShadow = true;
-    light.shadow.mapSize.set(2048, 2048);
-    Object.assign(light.shadow.camera, { left: -scale, right: scale, top: scale, bottom: -scale, near: .1, far: scale * 5 });
-    light.shadow.normalBias = scale * .002;
-    light.shadow.bias = -.0001;
-    light.shadow.radius = 3;
-  }
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(scale * 200, scale * 200),
     new THREE.MeshPhysicalMaterial({ color: '#070605', roughness: .94, metalness: 0, clearcoat: .04, clearcoatRoughness: 1, reflectivity: .12, envMapIntensity: .055 }),
