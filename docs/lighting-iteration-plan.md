@@ -59,22 +59,6 @@ Reject if:
 
 > Keep exposure and materials unchanged. Adjust only the neutral key light's position, size and orientation. Use a large soft source above and camera-left so the low-poly facets create alternating light and shadow. Do not add fill or orange light. Render one screenshot and stop.
 
-A `RectAreaLight` is a good starting point:
-
-```ts
-const key = new THREE.RectAreaLight(
-  0xfff8ed,
-  3,
-  5,
-  5
-);
-
-key.position.set(-4, 6, 4);
-key.lookAt(0, 1.5, 0);
-
-scene.add(key);
-```
-
 Treat the exact values as scene-dependent.
 
 ### Reviewer checklist
@@ -106,18 +90,6 @@ Reject if:
 
 > Keep the approved key unchanged. Remove ambient/environment fill, then add back only the minimum fill required to retain information in deep shadows. Do not brighten the overall mascot and do not introduce another obvious lighting direction. Render one screenshot and stop.
 
-Possible weak fill:
-
-```ts
-const fill = new THREE.HemisphereLight(
-  0x6f7780,
-  0x18120f,
-  0.08
-);
-
-scene.add(fill);
-```
-
 ### Reviewer checklist
 
 Check:
@@ -146,21 +118,6 @@ Reject if:
 
 > Keep the approved character lighting unchanged. Adjust only the ground plane. Make it much larger, nearly black, rough and visually continuous with the page/background. Remove any visible rectangular floor boundary. Do not change character lights. Render one screenshot and stop.
 
-Example:
-
-```ts
-const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(50, 50),
-  new THREE.MeshStandardMaterial({
-    color: 0x121110,
-    roughness: 0.88,
-    metalness: 0,
-  })
-);
-
-floor.rotation.x = -Math.PI / 2;
-```
-
 ### Reviewer checklist
 
 Approve when:
@@ -181,24 +138,6 @@ Reject if:
 ### Agent prompt
 
 > Temporarily disable the neutral key. Add/tune only a warm orange rear-right rim light. The goal is a thin coherent silhouette highlight along the right fist, outer arm, trunk and roots. Avoid orange illumination on broad front-facing surfaces. Change placement before intensity if the rim appears as random patches. Render one screenshot with the key still disabled, then stop.
-
-A `SpotLight` is a useful starting point:
-
-```ts
-const rim = new THREE.SpotLight(
-  0xff5a20,
-  80,
-  20,
-  THREE.MathUtils.degToRad(35),
-  0.7,
-  2
-);
-
-rim.position.set(4, 4, -4);
-rim.target.position.set(0, 2, 0);
-
-scene.add(rim, rim.target);
-```
 
 Treat the power as scene-scale dependent.
 
@@ -274,20 +213,6 @@ dark mascot
 
 > Keep the approved key/rim ratio unchanged. Add only grounding: a subtle shadow-casting light and restrained GTAO/SSAO. Concentrate the effect around root-floor contact, overlapping roots, arm/trunk joints and fist creases. Do not use AO to darken the whole mascot. Render one screenshot and stop.
 
-Because `RectAreaLight` does not cast shadows, a subtle supporting spotlight can be used:
-
-```ts
-const shadowKey = new THREE.SpotLight(
-  0xffffff,
-  1
-);
-
-shadowKey.castShadow = true;
-shadowKey.shadow.mapSize.set(2048, 2048);
-shadowKey.shadow.bias = -0.0001;
-shadowKey.shadow.normalBias = 0.02;
-```
-
 ### Reviewer checklist
 
 Approve when:
@@ -309,18 +234,6 @@ Reject if:
 ### Agent prompt
 
 > Keep all approved mascot lighting unchanged. Add only a very subtle dark background gradient/halo behind the mascot so the silhouette separates from the near-black page. Keep the corners almost black. It must not look like a visible spotlight. Render one screenshot and stop.
-
-Example CSS approach:
-
-```css
-background:
-  radial-gradient(
-    ellipse at 55% 57%,
-    #171411 0%,
-    #0d0d0d 42%,
-    #080808 75%
-  );
-```
 
 A physical backdrop plane is also acceptable if preferred.
 
@@ -348,22 +261,6 @@ Reject if:
 
 > Keep all approved lighting fixed. Improve only the bark material response. Add subtle dark value variation and roughness variation so grooves and facets respond more richly to grazing light. Preserve the charcoal / charred-wood appearance. Avoid visible noise or obvious procedural texture. Render one screenshot and stop.
 
-Example value range:
-
-```text
-base       #24211f
-lighter    #302b27
-darker     #191817
-```
-
-Possible roughness range:
-
-```text
-broad bark planes   0.80–0.90
-raised ridges       0.60–0.75
-deep grooves        0.85–0.95
-```
-
 ### Reviewer checklist
 
 Approve when:
@@ -385,19 +282,6 @@ Reject if:
 ### Agent prompt
 
 > Keep all approved lighting and materials unchanged. Add minimal bloom only to the hottest orange highlights. Use a high threshold, low strength and small radius. The rim must remain fully visible with bloom disabled. Render one screenshot with bloom enabled and one with bloom disabled, then stop.
-
-Example starting point:
-
-```ts
-const bloom = new UnrealBloomPass(
-  resolution,
-  0.15,
-  0.25,
-  1.0
-);
-```
-
-Tune according to the HDR values in the actual scene.
 
 ### Reviewer checklist
 
