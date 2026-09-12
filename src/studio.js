@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { createStrnkScene } from "./main.js";
+import { RectAreaLightHelper } from "three/addons/helpers/RectAreaLightHelper.js";
 import "./studio.css";
 
 const canvas = document.querySelector("#studio-canvas");
@@ -8,13 +9,6 @@ const technical = new THREE.Scene();
 const topCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 100);
 let layout = { width: 0, height: 0, split: 0, stacked: false };
 let state;
-
-function line(a, b, color = 0xcac8bf) {
-  return new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints([a, b]),
-    new THREE.LineBasicMaterial({ color, transparent: true, opacity: .82 }),
-  );
-}
 
 function label(text, color) {
   const canvas = document.createElement("canvas");
@@ -30,21 +24,6 @@ function label(text, color) {
   return sprite;
 }
 
-function addArrow(from, target, color) {
-  technical.add(new THREE.ArrowHelper(target.clone().sub(from).normalize(), from, state.scale * .28, color, state.scale * .075, state.scale * .045));
-}
-
-function addLight(name, light, material, labelOffset) {
-  if (!light.visible) return;
-  const { center, scale } = state;
-  const mount = new THREE.Group(); mount.position.copy(light.position); technical.add(mount);
-  const housing = new THREE.Mesh(new THREE.BoxGeometry(scale * .24, scale * .08, scale * .18), material); housing.position.y = scale * .05; mount.add(housing);
-  const face = new THREE.Mesh(new THREE.CylinderGeometry(scale * .08, scale * .08, scale * .025, 20), material); face.rotation.x = Math.PI / 2; face.position.set(0, scale * .05, -scale * .1); mount.add(face);
-  const point = light.position.clone(); point.y = center.y + scale * .06;
-  addArrow(point, new THREE.Vector3(center.x, point.y, center.z), material.color);
-  const marker = label(name, `#${material.color.getHexString()}`); marker.position.copy(point).add(labelOffset); technical.add(marker);
-}
-
 function updateTechnicalHelpers(nextState = state) {
   state = nextState;
   if (!state) return;
@@ -55,17 +34,20 @@ function updateTechnicalHelpers(nextState = state) {
   body.position.copy(camera.position); body.position.y = center.y + scale * .04; technical.add(body);
   const lens = new THREE.Mesh(new THREE.CylinderGeometry(scale * .075, scale * .075, scale * .13, 16), cameraMaterial);
   lens.rotation.x = Math.PI / 2; lens.position.copy(camera.position); lens.position.setY(center.y + scale * .04); lens.translateZ(-scale * .15); technical.add(lens);
-  const eye = new THREE.Vector3(camera.position.x, center.y + scale * .05, camera.position.z);
-  const planeCenter = new THREE.Vector3(center.x, eye.y, center.z - scale * .18);
-  const right = new THREE.Vector3(scale * .75, 0, 0); const forward = new THREE.Vector3(0, 0, scale * .58);
-  const corners = [planeCenter.clone().add(right).add(forward), planeCenter.clone().sub(right).add(forward), planeCenter.clone().sub(right).sub(forward), planeCenter.clone().add(right).sub(forward)];
-  for (let index = 0; index < 4; index += 1) { technical.add(line(corners[index], corners[(index + 1) % 4])); technical.add(line(eye, corners[index])); }
-  addArrow(eye, new THREE.Vector3(center.x, eye.y, center.z), 0xc8c6be);
-  const cameraLabel = label("Production camera", "#d6d4cc"); cameraLabel.position.copy(eye).add(new THREE.Vector3(-scale * .8, 0, -scale * .38)); technical.add(cameraLabel);
-  addLight("Key", lights.key, new THREE.MeshBasicMaterial({ color: 0xfff1df }), new THREE.Vector3(-scale * .7, 0, scale * .24));
-  addLight("Fill", lights.fill, new THREE.MeshBasicMaterial({ color: 0xffddbd }), new THREE.Vector3(-scale * .7, 0, scale * .24));
-  addLight("Rim A", lights.rimA, new THREE.MeshBasicMaterial({ color: 0xff7736 }), new THREE.Vector3(-scale * .55, 0, -scale * .4));
-  addLight("Rim B", lights.rimB, new THREE.MeshBasicMaterial({ color: 0xff7736 }), new THREE.Vector3(scale * .22, 0, -scale * .38));
+  // const cameraHelper = new THREE.CameraHelper(camera); cameraHelper.material.color.set(0xc8c6be); cameraHelper.update(); technical.add(cameraHelper);
+  const cameraLabel = label("Production camera", "#d6d4cc"); cameraLabel.position.set(camera.position.x - scale * .8, center.y + scale * .05, camera.position.z - scale * .38); technical.add(cameraLabel);
+  const addNativeLight = (name, light, offset) => {
+    if (!light.visible) return;
+    const helper = light.isRectAreaLight ? new RectAreaLightHelper(light) : new THREE.SpotLightHelper(light);
+    if (typeof helper.update === "function") helper.update();
+    technical.add(helper);
+    const marker = label(name, `#${light.color.getHexString()}`);
+    marker.position.copy(light.position).setY(center.y + scale * .06).add(offset); technical.add(marker);
+  };
+  addNativeLight("Key", lights.key, new THREE.Vector3(-scale * .7, 0, scale * .24));
+  addNativeLight("Fill", lights.fill, new THREE.Vector3(-scale * .7, 0, scale * .24));
+  addNativeLight("Rim A", lights.rimA, new THREE.Vector3(-scale * .55, 0, -scale * .4));
+  addNativeLight("Rim B", lights.rimB, new THREE.Vector3(scale * .22, 0, -scale * .38));
 }
 
 const composition = {

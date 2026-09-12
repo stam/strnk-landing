@@ -125,20 +125,32 @@ export async function createStrnkScene({
     rim: {
       enabled: true,
       color: "#ff824d",
-      primaryIntensity: 530,
-      secondaryIntensity: 169,
+      primaryIntensity: 590,
+      secondaryIntensity: 590,
       position: {
-        x: -0.61,
-        y: 0.11,
-        z: -0.61,
+        x: -0.69,
+        y: 1.05,
+        z: -0.98,
       },
-      angle: 0.67,
+      angle: 0.29,
       penumbra: 0.69,
     },
   };
   const stateListeners = new Set();
   const notifyState = () => {
-    const state = { lighting, camera, lights: { key: keyLight, fill: fillLight, rimA: rimLight, rimB: secondaryRimLight }, center, size, scale };
+    const state = {
+      lighting,
+      camera,
+      lights: {
+        key: keyLight,
+        fill: fillLight,
+        rimA: rimLight,
+        rimB: secondaryRimLight,
+      },
+      center,
+      size,
+      scale,
+    };
     composition?.onStateChange?.(state);
     stateListeners.forEach((listener) => listener(state));
   };
@@ -418,7 +430,10 @@ export async function createStrnkScene({
   function resize() {
     const { width, height } = host.getBoundingClientRect();
     if (!width || !height) return;
-    const studioViewport = composition?.getStudioViewport?.({ width, height }) ?? { width, height };
+    const studioViewport = composition?.getStudioViewport?.({
+      width,
+      height,
+    }) ?? { width, height };
     const framingWidth = studioViewport.width;
     const framingPanelHeight = studioViewport.height;
     const sceneExtension =
@@ -451,7 +466,14 @@ export async function createStrnkScene({
       );
     camera.lookAt(center);
     if (sceneExtension)
-      camera.setViewOffset(framingWidth, framingHeight, 0, 0, framingWidth, framingPanelHeight);
+      camera.setViewOffset(
+        framingWidth,
+        framingHeight,
+        0,
+        0,
+        framingWidth,
+        framingPanelHeight,
+      );
     camera.updateProjectionMatrix();
     mascot.updateMatrixWorld(true);
     contours.forEach((update) => update(camera));
@@ -467,7 +489,12 @@ export async function createStrnkScene({
       size,
       scale,
       lighting,
-      lights: { key: keyLight, fill: fillLight, rimA: rimLight, rimB: secondaryRimLight },
+      lights: {
+        key: keyLight,
+        fill: fillLight,
+        rimA: rimLight,
+        rimB: secondaryRimLight,
+      },
     });
     renderScene();
   }
@@ -481,7 +508,12 @@ export async function createStrnkScene({
       size,
       scale,
       lighting,
-      lights: { key: keyLight, fill: fillLight, rimA: rimLight, rimB: secondaryRimLight },
+      lights: {
+        key: keyLight,
+        fill: fillLight,
+        rimA: rimLight,
+        rimB: secondaryRimLight,
+      },
     };
     if (composition?.render) composition.render(state);
     else renderer.render(scene, camera);
@@ -579,8 +611,16 @@ export async function createStrnkScene({
     scale,
     lighting,
     floor,
-    lights: { key: keyLight, fill: fillLight, rimA: rimLight, rimB: secondaryRimLight },
-    onStateChange(listener) { stateListeners.add(listener); return () => stateListeners.delete(listener); },
+    lights: {
+      key: keyLight,
+      fill: fillLight,
+      rimA: rimLight,
+      rimB: secondaryRimLight,
+    },
+    onStateChange(listener) {
+      stateListeners.add(listener);
+      return () => stateListeners.delete(listener);
+    },
   };
 }
 
