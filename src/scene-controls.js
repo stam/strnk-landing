@@ -81,10 +81,11 @@ export function createSceneControls({
   floorFolder.close();
 
   const shadowFolder = gui.addFolder('Shadows');
-  for (const [kind, label] of [['self', 'Self shadows'], ['floor', 'Floor shadows']]) {
+  for (const [kind, label] of [['self', 'Self shadows'], ['floor', 'Floor shadows'], ['ao', 'Ambient occlusion']]) {
     const folder = shadowFolder.addFolder(label);
     add(folder.add(shadows[kind], 'enabled').name('Enabled').onChange(updateShadows), `shadow-${kind}-enabled`);
     add(folder.add(shadows[kind], 'strength', 0, 1, .01).name('Strength').onChange(updateShadows), `shadow-${kind}-strength`);
+    if (kind === 'ao') add(folder.add(shadows.ao, 'radius', .1, 12, .1).name('Radius').onChange(updateShadows), 'shadow-ao-radius');
     folder.open();
   }
   shadowFolder.close();
@@ -105,7 +106,7 @@ export function createSceneControls({
         Object.assign(lighting.rim[side].target, target);
       }
       Object.assign(floor, initial.floor);
-      for (const kind of ['self', 'floor']) Object.assign(shadows[kind], initial.shadows[kind]);
+      for (const kind of ['self', 'floor', 'ao']) Object.assign(shadows[kind], initial.shadows[kind]);
       applyKey();
       applyFill();
       applyRim();

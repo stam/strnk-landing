@@ -2,6 +2,10 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
 import { Reflector } from "three/addons/objects/Reflector.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { SSAOPass } from "three/addons/postprocessing/SSAOPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { createContour } from "./contour.js";
 import "./style.css";
 
@@ -229,8 +233,9 @@ float strnkKeyFillShadow() {
     },
   };
   const shadows = {
-    self: { enabled: true, strength: 1 },
+    self: { enabled: true, strength: 0.25 },
     floor: { enabled: true, strength: 1 },
+    ao: { enabled: true, strength: 0.18, radius: 3 },
   };
   const stateListeners = new Set();
   const notifyState = () => {
@@ -491,6 +496,8 @@ float strnkKeyFillShadow() {
   // The reflector's custom shader cannot receive the shadow map. A separate
   // transparent receiver keeps the reflection shader intact and darkens only
   // the pixels covered by the actual cast shadow.
+  let composer;
+  let ssaoPass;
   const contactShadow = new THREE.Mesh(
     new THREE.PlaneGeometry(scale * 500, scale * 500),
     new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.52 }),
@@ -504,6 +511,11 @@ float strnkKeyFillShadow() {
     shadowUniforms.self.value = shadows.self.enabled ? shadows.self.strength : 0;
     contactShadow.visible = !wireframe && shadows.floor.enabled;
     contactShadow.material.opacity = 0.52 * shadows.floor.strength;
+    if (ssaoPass) {
+      ssaoPass.enabled = shadows.ao.enabled;
+      ssaoPass.kernelRadius = shadows.ao.radius;
+      ssaoPass.copyMaterial.uniforms.opacity.value = shadows.ao.strength;
+    }
     renderer.shadowMap.needsUpdate = true;
     notifyState();
   }
@@ -535,6 +547,21 @@ float strnkKeyFillShadow() {
   };
   scene.add(ground);
   scene.add(contactShadow);
+  if (!composition && !wireframe) {
+    composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    ssaoPass = new SSAOPass(scene, camera, 1, 1);
+    // SSAOPass multiplies the scene by its AO buffer. Interpolating that buffer
+    // toward white makes its existing opacity uniform a true live strength.
+    ssaoPass.copyMaterial.fragmentShader = ssaoPass.copyMaterial.fragmentShader.replace(
+      "gl_FragColor = opacity * texel;",
+      "gl_FragColor = vec4( mix( vec3( 1.0 ), texel.rgb, opacity ), 1.0 );",
+    );
+    ssaoPass.copyMaterial.needsUpdate = true;
+    composer.addPass(ssaoPass);
+    composer.addPass(new OutputPass());
+    applyShadows();
+  }
   let pointerX = 0,
     pointerY = 0,
     frame;
@@ -554,6 +581,7 @@ float strnkKeyFillShadow() {
       ) || 0;
     const framingHeight = Math.max(framingPanelHeight - sceneExtension, 1);
     renderer.setSize(width, height, false);
+    composer?.setSize(width, height);
     camera.clearViewOffset();
     camera.aspect = framingWidth / framingHeight;
     const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
@@ -629,6 +657,7 @@ float strnkKeyFillShadow() {
       },
     };
     if (composition?.render) composition.render(state);
+    else if (composer) composer.render();
     else renderer.render(scene, camera);
   }
   window.addEventListener(
@@ -712,6 +741,8 @@ float strnkKeyFillShadow() {
     window.__strnkScene = sceneApi;
     import.meta.hot?.dispose(() => {
       disposeSceneControls();
+      composer?.passes.forEach((pass) => pass.dispose?.());
+      composer?.dispose();
       if (window.__strnkScene === sceneApi) delete window.__strnkScene;
     });
   }
