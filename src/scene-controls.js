@@ -2,14 +2,16 @@ export function createSceneControls({
   GUI,
   lighting,
   floor,
+  shadows,
   applyKey,
   applyFill,
   applyRim,
   applyExposure,
   applyFloor,
+  applyShadows,
   renderOnce,
 }) {
-  const initial = JSON.parse(JSON.stringify({ lighting, floor }));
+  const initial = JSON.parse(JSON.stringify({ lighting, floor, shadows }));
   const gui = new GUI({ title: 'Scene', width: 248, closeFolders: true });
   gui.domElement.dataset.sceneControls = 'true';
   const controllers = [];
@@ -24,6 +26,7 @@ export function createSceneControls({
   const updateRim = () => { applyRim(); renderOnce(); };
   const updateExposure = () => { applyExposure(); renderOnce(); };
   const updateFloor = () => { applyFloor(); refresh(); };
+  const updateShadows = () => { applyShadows(); renderOnce(); };
 
   add(gui.add(lighting, 'exposure', .1, 2, .01).name('Exposure').onChange(updateExposure), 'exposure');
   const key = gui.addFolder('Key');
@@ -77,6 +80,15 @@ export function createSceneControls({
   add(floorFolder.add(floor, 'screenEdgeFade', .001, .35, .001).name('Screen edge fade').onChange(updateFloor), 'floor-screen-edge-fade');
   floorFolder.close();
 
+  const shadowFolder = gui.addFolder('Shadows');
+  for (const [kind, label] of [['self', 'Self shadows'], ['floor', 'Floor shadows']]) {
+    const folder = shadowFolder.addFolder(label);
+    add(folder.add(shadows[kind], 'enabled').name('Enabled').onChange(updateShadows), `shadow-${kind}-enabled`);
+    add(folder.add(shadows[kind], 'strength', 0, 1, .01).name('Strength').onChange(updateShadows), `shadow-${kind}-strength`);
+    folder.open();
+  }
+  shadowFolder.close();
+
   const actions = {
     reset() {
       lighting.exposure = initial.lighting.exposure;
@@ -93,15 +105,17 @@ export function createSceneControls({
         Object.assign(lighting.rim[side].target, target);
       }
       Object.assign(floor, initial.floor);
+      for (const kind of ['self', 'floor']) Object.assign(shadows[kind], initial.shadows[kind]);
       applyKey();
       applyFill();
       applyRim();
       applyExposure();
       applyFloor();
+      applyShadows();
       refresh();
     },
     logSettings() {
-      console.log(JSON.stringify({ lighting, floor }, null, 2));
+      console.log(JSON.stringify({ lighting, floor, shadows }, null, 2));
     },
   };
   add(gui.add(actions, 'reset').name('Reset'), 'reset');

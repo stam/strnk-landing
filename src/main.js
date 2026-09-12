@@ -48,11 +48,24 @@ export async function createStrnkScene({
     polygonOffsetUnits: 1,
   });
   const line = new THREE.LineBasicMaterial({ color: "#cccac2" });
+  const keyFillShadowPositions = {
+    key: new THREE.Vector3(),
+    fill: new THREE.Vector3(),
+  };
+  const shadowUniforms = {
+    self: { value: 1 },
+  };
   const meshes = [];
   const contours = [];
   mascot.traverse((object) => {
     if (object.isMesh) meshes.push(object);
   });
+  mascot.updateMatrixWorld(true);
+  const bounds = new THREE.Box3().setFromObject(mascot);
+  const center = bounds.getCenter(new THREE.Vector3());
+  const size = bounds.getSize(new THREE.Vector3());
+  const scale = Math.max(size.x, size.y, size.z);
+
   const charcoal = new THREE.Color("#1b1918");
   function studioMaterial(source) {
     if (!source?.isMeshStandardMaterial) return source;
@@ -67,35 +80,52 @@ export async function createStrnkScene({
     if (material.emissive) material.emissive.set(0x000000);
     material.emissiveIntensity = 0;
     // RectAreaLight has no native shadow map support. Apply the companion
-    // directional map to only the first two area lights (key and fill) so
+    // directional map to the key and fill area lights so
     // cavities receive real occlusion while both rim contributions stay intact.
     material.onBeforeCompile = (shader) => {
+      shader.uniforms.strnkKeyPosition = { value: keyFillShadowPositions.key };
+      shader.uniforms.strnkFillPosition = {
+        value: keyFillShadowPositions.fill,
+      };
+      shader.uniforms.strnkSelfShadowStrength = shadowUniforms.self;
       shader.fragmentShader = shader.fragmentShader
         .replace(
           "#include <shadowmap_pars_fragment>",
           `#include <shadowmap_pars_fragment>
 
+uniform vec3 strnkKeyPosition;
+uniform vec3 strnkFillPosition;
+uniform float strnkSelfShadowStrength;
+
+bool strnkOccludesRectAreaLight( vec3 lightPosition ) {
+  return distance( lightPosition, strnkKeyPosition ) < 0.01 || distance( lightPosition, strnkFillPosition ) < 0.01;
+}
+
 float strnkKeyFillShadow() {
 #if NUM_DIR_LIGHT_SHADOWS > 0
   DirectionalLightShadow shadow = directionalLightShadows[ 0 ];
-  return receiveShadow
+  float shadowMask = receiveShadow
     ? getShadow( directionalShadowMap[ 0 ], shadow.shadowMapSize, shadow.shadowIntensity, shadow.shadowBias, shadow.shadowRadius, vDirectionalShadowCoord[ 0 ] )
     : 1.0;
+  return mix( 1.0, shadowMask, strnkSelfShadowStrength );
 #else
   return 1.0;
 #endif
 }`,
         )
         .replace(
-          "rectAreaLight = rectAreaLights[ i ];\n\t\tRE_Direct_RectArea",
-          `rectAreaLight = rectAreaLights[ i ];
-\t\t#if ( UNROLLED_LOOP_INDEX < 2 )
+          "#include <lights_fragment_begin>",
+          THREE.ShaderChunk.lights_fragment_begin.replace(
+            "rectAreaLight = rectAreaLights[ i ];",
+            `rectAreaLight = rectAreaLights[ i ];
+\n\t\tif ( strnkOccludesRectAreaLight( rectAreaLight.position ) ) {
 \t\t\trectAreaLight.color *= strnkKeyFillShadow();
-\t\t#endif
-\t\tRE_Direct_RectArea`,
+\t\t}
+`,
+          ),
         );
     };
-    material.customProgramCacheKey = () => "strnk-key-fill-shadow-v1";
+    material.customProgramCacheKey = () => "strnk-key-fill-shadow-v2";
     material.needsUpdate = true;
     return material;
   }
@@ -108,6 +138,19 @@ float strnkKeyFillShadow() {
       object.material = Array.isArray(object.material)
         ? object.material.map(studioMaterial)
         : studioMaterial(object.material);
+    if (!wireframe) {
+      const previousOnBeforeRender = object.onBeforeRender;
+      object.onBeforeRender = function (...args) {
+        const [, , activeCamera] = args;
+        keyFillShadowPositions.key
+          .copy(keyLight.position)
+          .applyMatrix4(activeCamera.matrixWorldInverse);
+        keyFillShadowPositions.fill
+          .copy(fillLight.position)
+          .applyMatrix4(activeCamera.matrixWorldInverse);
+        previousOnBeforeRender.apply(this, args);
+      };
+    }
     if (wireframe) {
       object.material = wireframeFill;
       const edgeAngle = object.name.toLowerCase().includes("fist") ? 22 : 10;
@@ -121,10 +164,6 @@ float strnkKeyFillShadow() {
     }
   }
   scene.add(mascot);
-  const bounds = new THREE.Box3().setFromObject(mascot);
-  const center = bounds.getCenter(new THREE.Vector3());
-  const size = bounds.getSize(new THREE.Vector3());
-  const scale = Math.max(size.x, size.y, size.z);
   // Key position and size are mascot-scale multiples; position is relative to the bounds center.
   const lighting = {
     exposure: renderer.toneMappingExposure,
@@ -189,10 +228,15 @@ float strnkKeyFillShadow() {
       },
     },
   };
+  const shadows = {
+    self: { enabled: true, strength: 1 },
+    floor: { enabled: true, strength: 1 },
+  };
   const stateListeners = new Set();
   const notifyState = () => {
     const state = {
       lighting,
+      shadows,
       camera,
       lights: {
         key: keyLight,
@@ -456,6 +500,14 @@ float strnkKeyFillShadow() {
   contactShadow.receiveShadow = true;
   contactShadow.visible = !wireframe;
   contactShadow.material.depthWrite = false;
+  function applyShadows() {
+    shadowUniforms.self.value = shadows.self.enabled ? shadows.self.strength : 0;
+    contactShadow.visible = !wireframe && shadows.floor.enabled;
+    contactShadow.material.opacity = 0.52 * shadows.floor.strength;
+    renderer.shadowMap.needsUpdate = true;
+    notifyState();
+  }
+  applyShadows();
   function applyFloor() {
     const minimumFadeGap = Math.max(scale * 0.01, 0.01);
     floor.radialFadeStart = Math.min(
@@ -549,6 +601,7 @@ float strnkKeyFillShadow() {
       size,
       scale,
       lighting,
+      shadows,
       lights: {
         key: keyLight,
         fill: fillLight,
@@ -635,21 +688,25 @@ float strnkKeyFillShadow() {
       GUI,
       lighting,
       floor,
+      shadows,
       applyKey,
       applyFill,
       applyRim,
       applyExposure,
       applyFloor,
+      applyShadows,
       renderOnce,
     });
     const sceneApi = {
       lighting,
       floor,
+      shadows,
       applyKey,
       applyFill,
       applyRim,
       applyExposure,
       applyFloor,
+      applyShadows,
       renderOnce,
     };
     window.__strnkScene = sceneApi;
