@@ -51,8 +51,8 @@ Background commands read the saved file; use MCP or the console to review unsave
    uvx --python 3.11 --from playwright python tools/web/capture_preview.py http://127.0.0.1:5173/
    ```
 
-   It writes PNGs to `.tmp/web/`, waits for `.scene.ready` and fonts, and fails for page errors or horizontal overflow.
-3. Inspect desktop/mobile solid and wireframe PNGs, plus front and elevated side views. Check composition, silhouette, lighting, clipping, and small-screen fit. Debug URLs `?camera=front`, `?camera=side`, and `?view=wireframe` work only in development.
+   It writes PNGs to `.tmp/web/`, waits for the static homepage image or Studio's ready scene and fonts, and fails for page errors or horizontal overflow.
+3. Review the static homepage at desktop and mobile sizes. Run a separate desktop smoke capture for `studio.html`; Studio-only debug URLs `?camera=front`, `?camera=side`, and `?view=wireframe` work only in development.
 4. Adjust web layout/lighting directly; return to the model loop for geometry changes. Recapture and inspect after adjustments, then run `yarn.cmd build`.
 
 Generated files under `.tmp/` are ignored and replaceable. Historical experiments and reviews are archived under `.tmp/archive/`; they are not required for this workflow. Keep future one-off scripts in `.tmp/blender/`, and promote reusable operations into `tools/`.
