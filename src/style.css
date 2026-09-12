@@ -8,7 +8,7 @@ a { color: inherit; }
 .page { position: relative; isolation: isolate; min-height: 100svh; padding: 0 5.2%; overflow: hidden; background: radial-gradient(ellipse at 67% 62%, #1d1b18a6, transparent 46%), #10100f; }
 .header, .footer { display: flex; align-items: center; justify-content: space-between; }
 .header { position: relative; z-index: 2; height: 88px; gap: 24px; }
-.brand { display: block; height: 40px; text-decoration: none; }
+.brand { display: flex; align-items: center; height: 46px; padding: 3px 0; text-decoration: none; opacity: 0}
 .brand img { display: block; width: auto; height: 100%; }
 .header-note { color: #95938c; font-size: 10px; letter-spacing: 1.8px; }
 .button { display: inline-flex; align-items: center; justify-content: space-between; gap: 30px; min-height: 46px; padding: 10px 23px; border: 1px solid #e8e5dbb0; border-radius: 40px; text-decoration: none; font-size: 14px; transition: border-color .2s, background .2s; }
@@ -102,7 +102,7 @@ a:focus-visible { outline: 2px solid #ff7736; outline-offset: 6px; }
 @media (max-width: 760px) {
   .page { padding: 0 6%; }
   .header { height: 76px; }
-  .brand { height: 34px; }
+  .brand { height: 40px; padding: 3px 0; }
   .header-note { display: none; }
   .hero-copy { padding-top: 21px; }
   h1 { font-size: 34.5vw; margin: 0 0 22px -2px; }
