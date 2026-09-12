@@ -15,6 +15,15 @@ yarn preview
 
 Deploy `dist/` to static hosting. No backend is required. Fonts load from Google Fonts.
 
+## GitHub Pages
+
+The GitHub Actions workflow deploys the `master` branch to GitHub Pages. In the
+repository's **Settings → Pages**, set **Source** to **GitHub Actions**. After the
+first deployment, GitHub will show the site's published URL on that page.
+
+The Pages build uses relative asset paths, so it works at the repository URL and
+also if a custom domain is configured later.
+
 ## Repository
 
 - `src/main.js`: model loading, lighting, camera, pointer movement, and reduced motion.
