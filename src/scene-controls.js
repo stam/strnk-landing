@@ -50,7 +50,8 @@ export function createSceneControls({
 
   const rim = gui.addFolder('Rim');
   add(rim.add(lighting.rim, 'enabled').name('Enabled').onChange(updateRim), 'rim-enabled');
-  add(rim.add(lighting.rim, 'intensity', 0, 1000, 1).name('Intensity').onChange(updateRim), 'rim-intensity');
+  add(rim.add(lighting.rim, 'primaryIntensity', 0, 1000, 1).name('Primary intensity').onChange(updateRim), 'rim-primary-intensity');
+  add(rim.add(lighting.rim, 'secondaryIntensity', 0, 1000, 1).name('Secondary intensity').onChange(updateRim), 'rim-secondary-intensity');
   add(rim.addColor(lighting.rim, 'color').name('Color').onChange(updateRim), 'rim-color');
   add(rim.add(lighting.rim.position, 'x', -3, 3, .01).name('X scale').onChange(updateRim), 'rim-x');
   add(rim.add(lighting.rim.position, 'y', -3, 3, .01).name('Y scale').onChange(updateRim), 'rim-y');

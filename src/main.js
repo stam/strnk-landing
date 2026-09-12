@@ -92,7 +92,7 @@ async function start() {
   const lighting = {
     exposure: renderer.toneMappingExposure,
     key: {
-      enabled: true,
+      enabled: false,
       color: "#ffffff",
       intensity: 19.3,
       width: 1.84,
@@ -118,13 +118,14 @@ async function start() {
     rim: {
       enabled: true,
       color: "#ff824d",
-      intensity: 169,
+      primaryIntensity: 530,
+      secondaryIntensity: 169,
       position: {
-        x: 0,
-        y: -0.25,
-        z: -0.54,
+        x: -0.61,
+        y: 0.11,
+        z: -0.61,
       },
-      angle: 1.08,
+      angle: 0.67,
       penumbra: 0.69,
     },
   };
@@ -184,8 +185,17 @@ async function start() {
   // the broad frontal planes.
   const rimLight = studioSpot(
     lighting.rim.color,
-    lighting.rim.intensity,
+    lighting.rim.primaryIntensity,
     lighting.rim.position.x,
+    lighting.rim.position.y,
+    lighting.rim.position.z,
+    lighting.rim.angle,
+    lighting.rim.penumbra,
+  );
+  const secondaryRimLight = studioSpot(
+    lighting.rim.color,
+    lighting.rim.secondaryIntensity,
+    -lighting.rim.position.x,
     lighting.rim.position.y,
     lighting.rim.position.z,
     lighting.rim.angle,
@@ -220,7 +230,7 @@ async function start() {
   function applyRim() {
     rimLight.visible = lighting.rim.enabled;
     rimLight.color.set(lighting.rim.color);
-    rimLight.intensity = lighting.rim.intensity;
+    rimLight.intensity = lighting.rim.primaryIntensity;
     rimLight.angle = lighting.rim.angle;
     rimLight.penumbra = lighting.rim.penumbra;
     rimLight.position.set(
@@ -228,8 +238,20 @@ async function start() {
       center.y + lighting.rim.position.y * scale,
       center.z + lighting.rim.position.z * scale,
     );
+    secondaryRimLight.visible = lighting.rim.enabled;
+    secondaryRimLight.color.set(lighting.rim.color);
+    secondaryRimLight.intensity = lighting.rim.secondaryIntensity;
+    secondaryRimLight.angle = lighting.rim.angle;
+    secondaryRimLight.penumbra = lighting.rim.penumbra;
+    secondaryRimLight.position.set(
+      center.x - lighting.rim.position.x * scale,
+      center.y + lighting.rim.position.y * scale,
+      center.z + lighting.rim.position.z * scale,
+    );
     rimLight.target.position.copy(center);
     rimLight.target.updateMatrixWorld();
+    secondaryRimLight.target.position.copy(center);
+    secondaryRimLight.target.updateMatrixWorld();
   }
   function applyExposure() {
     renderer.toneMappingExposure = lighting.exposure;
