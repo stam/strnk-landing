@@ -66,6 +66,36 @@ export async function createStrnkScene({
     material.envMapIntensity = 0.18;
     if (material.emissive) material.emissive.set(0x000000);
     material.emissiveIntensity = 0;
+    // RectAreaLight has no native shadow map support. Apply the companion
+    // directional map to only the first two area lights (key and fill) so
+    // cavities receive real occlusion while both rim contributions stay intact.
+    material.onBeforeCompile = (shader) => {
+      shader.fragmentShader = shader.fragmentShader
+        .replace(
+          "#include <shadowmap_pars_fragment>",
+          `#include <shadowmap_pars_fragment>
+
+float strnkKeyFillShadow() {
+#if NUM_DIR_LIGHT_SHADOWS > 0
+  DirectionalLightShadow shadow = directionalLightShadows[ 0 ];
+  return receiveShadow
+    ? getShadow( directionalShadowMap[ 0 ], shadow.shadowMapSize, shadow.shadowIntensity, shadow.shadowBias, shadow.shadowRadius, vDirectionalShadowCoord[ 0 ] )
+    : 1.0;
+#else
+  return 1.0;
+#endif
+}`,
+        )
+        .replace(
+          "rectAreaLight = rectAreaLights[ i ];\n\t\tRE_Direct_RectArea",
+          `rectAreaLight = rectAreaLights[ i ];
+\t\t#if ( UNROLLED_LOOP_INDEX < 2 )
+\t\t\trectAreaLight.color *= strnkKeyFillShadow();
+\t\t#endif
+\t\tRE_Direct_RectArea`,
+        );
+    };
+    material.customProgramCacheKey = () => "strnk-key-fill-shadow-v1";
     material.needsUpdate = true;
     return material;
   }
@@ -225,6 +255,30 @@ export async function createStrnkScene({
     lighting.rim.left.height * scale,
   );
   scene.add(rimLight, secondaryRimLight);
+
+  // Rect area lights give the approved broad softbox response, but WebGL does
+  // not let them cast shadows. This low-energy companion is biased overhead
+  // from the key-facing side, keeping root contacts compact while restoring
+  // self-occlusion without changing the softboxes' visible response.
+  const shadowKey = new THREE.DirectionalLight(lighting.key.color, 0.9);
+  shadowKey.name = "Key shadow";
+  shadowKey.castShadow = !wireframe;
+  shadowKey.position.set(
+    center.x + scale * 0.52,
+    center.y + scale * 2.4,
+    center.z + scale * 0.15,
+  );
+  shadowKey.target.position.copy(center);
+  shadowKey.shadow.mapSize.set(1024, 1024);
+  shadowKey.shadow.camera.near = scale * 0.05;
+  shadowKey.shadow.camera.far = scale * 4;
+  shadowKey.shadow.camera.left = -scale * 1.7;
+  shadowKey.shadow.camera.right = scale * 1.7;
+  shadowKey.shadow.camera.top = scale * 1.7;
+  shadowKey.shadow.camera.bottom = -scale * 1.7;
+  shadowKey.shadow.bias = -0.00025;
+  shadowKey.shadow.normalBias = 0.018;
+  scene.add(shadowKey, shadowKey.target);
   keyLight.name = "Key";
   fillLight.name = "Fill";
   rimLight.name = "Rim Right";
@@ -241,6 +295,8 @@ export async function createStrnkScene({
       center.z + lighting.key.position.z * scale,
     );
     keyLight.lookAt(center);
+    shadowKey.color.copy(keyLight.color);
+    shadowKey.target.position.copy(center);
     notifyState();
   }
   function applyFill() {
@@ -388,6 +444,18 @@ export async function createStrnkScene({
   ground.visible = !wireframe;
   ground.material.transparent = true;
   ground.material.depthWrite = false;
+  // The reflector's custom shader cannot receive the shadow map. A separate
+  // transparent receiver keeps the reflection shader intact and darkens only
+  // the pixels covered by the actual cast shadow.
+  const contactShadow = new THREE.Mesh(
+    new THREE.PlaneGeometry(scale * 500, scale * 500),
+    new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.52 }),
+  );
+  contactShadow.rotation.x = -Math.PI / 2;
+  contactShadow.position.set(center.x, bounds.min.y - 0.014, center.z);
+  contactShadow.receiveShadow = true;
+  contactShadow.visible = !wireframe;
+  contactShadow.material.depthWrite = false;
   function applyFloor() {
     const minimumFadeGap = Math.max(scale * 0.01, 0.01);
     floor.radialFadeStart = Math.min(
@@ -414,6 +482,7 @@ export async function createStrnkScene({
     renderFloorReflection.call(ground, renderer, ...renderArgs);
   };
   scene.add(ground);
+  scene.add(contactShadow);
   let pointerX = 0,
     pointerY = 0,
     frame;
