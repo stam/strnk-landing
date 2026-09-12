@@ -7,6 +7,11 @@ out.mkdir(parents=True, exist_ok=True)
 captures = [('desktop', '',1440,900), ('front','?camera=front',1440,900), ('side','?camera=side',1440,900), ('desktop-wireframe','?view=wireframe',1440,900), ('mobile-wireframe','?view=wireframe',390,844), ('mobile','',390,844), ('concept-size','',1122,1402), ('small-mobile','',320,740)]
 args = sys.argv[1:]
 only = None
+prefix = ''
+if '--prefix' in args:
+    index = args.index('--prefix')
+    prefix = args[index + 1]
+    del args[index:index + 2]
 if '--only' in args:
     index = args.index('--only')
     only = args[index + 1]
@@ -27,7 +32,7 @@ with sync_playwright() as p:
         page.locator('.scene.ready').wait_for(timeout=30000)
         page.evaluate('document.fonts.ready')
         page.wait_for_timeout(500)
-        page.screenshot(path=str(out / (name+'.png')),full_page=True)
+        page.screenshot(path=str(out / (prefix + name+'.png')),full_page=True)
         if page.evaluate('document.documentElement.scrollWidth > innerWidth'):
             overflows.append(name)
     print({'errors':errors})

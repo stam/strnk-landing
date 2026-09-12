@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#10100f" />
+    <meta name="description" content="STRNK studio and technical overhead view." />
+    <title>STRNK — Studio view</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="studio-page">
+    <header class="studio-header">
+      <a class="studio-brand" href="/" aria-label="Return to STRNK home">STRNK<span>.</span></a>
+      <p>LIVE STUDIO / 001</p>
+      <a class="studio-home" href="/">Home <span aria-hidden="true">↗</span></a>
+    </header>
+    <main class="studio-main">
+      <section class="view-panel studio-panel" aria-labelledby="studio-view-title">
+        <div class="view-title"><p>01 / PRIMARY</p><h1 id="studio-view-title">Studio view</h1></div>
+        <p class="view-note">Frontal production camera</p>
+      </section>
+      <section class="view-panel top-panel" aria-labelledby="top-view-title">
+        <div class="view-title"><p>02 / TECHNICAL</p><h1 id="top-view-title">Top view</h1></div>
+        <p class="view-note">Camera &amp; active sources</p>
+        <div class="top-key" aria-label="Technical view key"><span class="camera-key"></span> Camera <span class="light-key"></span> Active light</div>
+      </section>
+      <canvas id="studio-canvas" aria-label="Live synchronized three-dimensional studio scene, with a front studio view and an overhead technical view"></canvas>
+    </main>
+    <footer class="studio-footer"><span>STRNK. POWERFUL SOFTWARE.</span><span>CAMERA / LIGHTING STUDY</span></footer>
+    <script type="module" src="/src/studio.js"></script>
+  </body>
+</html>

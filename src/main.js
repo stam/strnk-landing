@@ -5,16 +5,22 @@ import { Reflector } from "three/addons/objects/Reflector.js";
 import { createContour } from "./contour.js";
 import "./style.css";
 
-const canvas = document.querySelector("#mascot");
-const host = document.querySelector(".scene");
-const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
-// Development-only views let us review lighting and the unchanged silhouette.
-const review = import.meta.env.DEV
-  ? new URLSearchParams(location.search)
-  : new URLSearchParams();
-const wireframe = review.get("view") === "wireframe";
-
-async function start() {
+/**
+ * The production scene factory is shared by the landing page and studio page.
+ * Consumers may supply a composition that owns viewport layout only; the GLB,
+ * material response, lights, floor, camera, motion, and review hooks live here.
+ */
+export async function createStrnkScene({
+  canvas = document.querySelector("#mascot"),
+  host = document.querySelector(".scene"),
+  composition = null,
+} = {}) {
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  // Development-only views let us review lighting and the unchanged silhouette.
+  const review = import.meta.env.DEV
+    ? new URLSearchParams(location.search)
+    : new URLSearchParams();
+  const wireframe = review.get("view") === "wireframe";
   const renderer = new THREE.WebGLRenderer({
     canvas,
     antialias: true,
@@ -22,6 +28,7 @@ async function start() {
   });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setClearColor(0x000000, 0);
+  renderer.autoClear = !composition;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.65;
@@ -129,6 +136,12 @@ async function start() {
       penumbra: 0.69,
     },
   };
+  const stateListeners = new Set();
+  const notifyState = () => {
+    const state = { lighting, camera, lights: { key: keyLight, fill: fillLight, rimA: rimLight, rimB: secondaryRimLight }, center, size, scale };
+    composition?.onStateChange?.(state);
+    stateListeners.forEach((listener) => listener(state));
+  };
   function aim(light, x, y, z) {
     light.position.set(
       center.x + x * scale,
@@ -201,6 +214,10 @@ async function start() {
     lighting.rim.angle,
     lighting.rim.penumbra,
   );
+  keyLight.name = "Key";
+  fillLight.name = "Fill";
+  rimLight.name = "Rim A";
+  secondaryRimLight.name = "Rim B";
   function applyKey() {
     keyLight.visible = lighting.key.enabled;
     keyLight.color.set(lighting.key.color);
@@ -213,6 +230,7 @@ async function start() {
       center.z + lighting.key.position.z * scale,
     );
     keyLight.lookAt(center);
+    notifyState();
   }
   function applyFill() {
     fillLight.visible = lighting.fill.enabled;
@@ -226,6 +244,7 @@ async function start() {
       center.z + lighting.fill.position.z * scale,
     );
     fillLight.lookAt(center);
+    notifyState();
   }
   function applyRim() {
     rimLight.visible = lighting.rim.enabled;
@@ -252,6 +271,7 @@ async function start() {
     rimLight.target.updateMatrixWorld();
     secondaryRimLight.target.position.copy(center);
     secondaryRimLight.target.updateMatrixWorld();
+    notifyState();
   }
   function applyExposure() {
     renderer.toneMappingExposure = lighting.exposure;
@@ -383,6 +403,7 @@ async function start() {
     uniforms.floorFadeStart.value = floor.radialFadeStart;
     uniforms.floorFadeEnd.value = floor.radialFadeEnd;
     uniforms.screenEdgeFade.value = floor.screenEdgeFade;
+    notifyState();
   }
   const renderFloorReflection = ground.onBeforeRender;
   ground.onBeforeRender = (renderer, ...renderArgs) => {
@@ -397,14 +418,17 @@ async function start() {
   function resize() {
     const { width, height } = host.getBoundingClientRect();
     if (!width || !height) return;
+    const studioViewport = composition?.getStudioViewport?.({ width, height }) ?? { width, height };
+    const framingWidth = studioViewport.width;
+    const framingPanelHeight = studioViewport.height;
     const sceneExtension =
       Number.parseFloat(
         getComputedStyle(host).getPropertyValue("--scene-extension"),
       ) || 0;
-    const framingHeight = Math.max(height - sceneExtension, 1);
+    const framingHeight = Math.max(framingPanelHeight - sceneExtension, 1);
     renderer.setSize(width, height, false);
     camera.clearViewOffset();
-    camera.aspect = width / framingHeight;
+    camera.aspect = framingWidth / framingHeight;
     const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
     const distance =
       Math.max(
@@ -427,11 +451,40 @@ async function start() {
       );
     camera.lookAt(center);
     if (sceneExtension)
-      camera.setViewOffset(width, framingHeight, 0, 0, width, height);
+      camera.setViewOffset(framingWidth, framingHeight, 0, 0, framingWidth, framingPanelHeight);
     camera.updateProjectionMatrix();
     mascot.updateMatrixWorld(true);
     contours.forEach((update) => update(camera));
-    renderer.render(scene, camera);
+    composition?.resize?.({
+      width,
+      height,
+      studioViewport,
+      renderer,
+      scene,
+      camera,
+      mascot,
+      center,
+      size,
+      scale,
+      lighting,
+      lights: { key: keyLight, fill: fillLight, rimA: rimLight, rimB: secondaryRimLight },
+    });
+    renderScene();
+  }
+  function renderScene() {
+    const state = {
+      renderer,
+      scene,
+      camera,
+      mascot,
+      center,
+      size,
+      scale,
+      lighting,
+      lights: { key: keyLight, fill: fillLight, rimA: rimLight, rimB: secondaryRimLight },
+    };
+    if (composition?.render) composition.render(state);
+    else renderer.render(scene, camera);
   }
   window.addEventListener(
     "pointermove",
@@ -455,7 +508,7 @@ async function start() {
       ((motion ? pointerY * 0.015 : 0) - mascot.rotation.x) * 0.045;
     mascot.updateMatrixWorld(true);
     contours.forEach((update) => update(camera));
-    renderer.render(scene, camera);
+    renderScene();
     if (motion && !document.hidden) frame = requestAnimationFrame(render);
   }
   function restart() {
@@ -465,7 +518,7 @@ async function start() {
   function renderOnce() {
     mascot.updateMatrixWorld(true);
     contours.forEach((update) => update(camera));
-    renderer.render(scene, camera);
+    renderScene();
   }
   mascot.rotation.y = -0.06;
   new ResizeObserver(resize).observe(host);
@@ -516,8 +569,23 @@ async function start() {
   resize();
   render();
   host.classList.add("ready");
+  return {
+    renderer,
+    scene,
+    camera,
+    mascot,
+    center,
+    size,
+    scale,
+    lighting,
+    floor,
+    lights: { key: keyLight, fill: fillLight, rimA: rimLight, rimB: secondaryRimLight },
+    onStateChange(listener) { stateListeners.add(listener); return () => stateListeners.delete(listener); },
+  };
 }
 
-start().catch((error) =>
-  console.warn("3D rendering unavailable; showing the STRNK logo.", error),
-);
+if (document.querySelector("#mascot")) {
+  createStrnkScene().catch((error) =>
+    console.warn("3D rendering unavailable; showing the STRNK logo.", error),
+  );
+}
