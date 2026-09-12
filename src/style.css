@@ -8,7 +8,8 @@ a { color: inherit; }
 .page { position: relative; isolation: isolate; min-height: 100svh; padding: 0 5.2%; overflow: hidden; background: radial-gradient(ellipse at 67% 62%, #1d1b18a6, transparent 46%), #10100f; }
 .header, .footer { display: flex; align-items: center; justify-content: space-between; }
 .header { position: relative; z-index: 2; height: 88px; gap: 24px; }
-.brand { font-family: 'Barlow Condensed', Impact, sans-serif; text-decoration: none; font-size: 34px; font-weight: 900; letter-spacing: -1.2px; }
+.brand { display: block; height: 40px; text-decoration: none; }
+.brand img { display: block; width: auto; height: 100%; }
 .header-note { color: #95938c; font-size: 10px; letter-spacing: 1.8px; }
 .button { display: inline-flex; align-items: center; justify-content: space-between; gap: 30px; min-height: 46px; padding: 10px 23px; border: 1px solid #e8e5dbb0; border-radius: 40px; text-decoration: none; font-size: 14px; transition: border-color .2s, background .2s; }
 .button span { font-size: 23px; line-height: 1; }
@@ -16,7 +17,7 @@ a { color: inherit; }
 .hero { position: relative; }
 .hero-copy { position: relative; z-index: 2; pointer-events: none; padding-top: 14px; }
 .hero-copy a { pointer-events: auto; }
-h1 { width: fit-content; font-family: 'Barlow Condensed', Impact, 'Arial Narrow', sans-serif; font-size: clamp(170px, 25.7vw, 420px); font-weight: 900; line-height: .82; letter-spacing: -.035em; margin: 0 0 27px -7px; }
+h1 { width: fit-content; font-family: 'Barlow Condensed', Impact, 'Arial Narrow', sans-serif; font-size: clamp(170px, 25.7vw, 420px); font-weight: 900; line-height: .82; letter-spacing: -1px; margin: 0 0 27px -7px; }
 .period { color: #ff7736; }
 .subtitle { font-size: clamp(30px, 4.2vw, 56px); margin: 0; letter-spacing: -.055em; font-weight: 500; line-height: 1.15; }
 .description { font-size: clamp(15px, 1.7vw, 21px); line-height: 1.4; color: #94928c; margin: 13px 0 25px; }
@@ -101,7 +102,7 @@ a:focus-visible { outline: 2px solid #ff7736; outline-offset: 6px; }
 @media (max-width: 760px) {
   .page { padding: 0 6%; }
   .header { height: 76px; }
-  .brand { font-size: 29px; }
+  .brand { height: 34px; }
   .header-note { display: none; }
   .hero-copy { padding-top: 21px; }
   h1 { font-size: 34.5vw; margin: 0 0 22px -2px; }
