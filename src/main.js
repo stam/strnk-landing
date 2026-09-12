@@ -123,17 +123,40 @@ export async function createStrnkScene({
       },
     },
     rim: {
-      enabled: true,
-      color: "#ff824d",
-      primaryIntensity: 590,
-      secondaryIntensity: 590,
-      position: {
-        x: -0.69,
-        y: 1.05,
-        z: -0.98,
+      right: {
+        enabled: true,
+        color: "#ff6d2e",
+        intensity: 260,
+        width: 0.94,
+        height: 2.58,
+        position: {
+          x: -1.76,
+          y: 0.36,
+          z: -1.8,
+        },
+        target: {
+          x: -1.28,
+          y: 0.04,
+          z: -0.42,
+        },
       },
-      angle: 0.29,
-      penumbra: 0.69,
+      left: {
+        enabled: true,
+        color: "#d97938",
+        intensity: 90,
+        width: 2.45,
+        height: 1.02,
+        position: {
+          x: 1.78,
+          y: -0.32,
+          z: -1.54,
+        },
+        target: {
+          x: 1.24,
+          y: -0.54,
+          z: -0.34,
+        },
+      },
     },
   };
   const stateListeners = new Set();
@@ -164,25 +187,6 @@ export async function createStrnkScene({
     scene.add(light);
     return light;
   }
-  function studioSpot(color, intensity, x, y, z, angle, penumbra) {
-    const light = new THREE.SpotLight(
-      color,
-      intensity,
-      scale * 6,
-      angle,
-      penumbra,
-      2,
-    );
-    light.position.set(
-      center.x + x * scale,
-      center.y + y * scale,
-      center.z + z * scale,
-    );
-    light.target.position.copy(center);
-    scene.add(light, light.target);
-    light.visible = false;
-    return light;
-  }
   // Step three: retain the approved key and add one soft, neutral fill source.
   const keyLight = aim(
     new THREE.RectAreaLight(
@@ -206,30 +210,25 @@ export async function createStrnkScene({
     lighting.fill.position.y,
     lighting.fill.position.z,
   );
-  // A single rear, viewer-right rim isolates the silhouette without reaching
-  // the broad frontal planes.
-  const rimLight = studioSpot(
-    lighting.rim.color,
-    lighting.rim.primaryIntensity,
-    lighting.rim.position.x,
-    lighting.rim.position.y,
-    lighting.rim.position.z,
-    lighting.rim.angle,
-    lighting.rim.penumbra,
+  // Separate rear softboxes keep each side's coverage and aim independently
+  // adjustable, without adding a broad frontal source.
+  const rimLight = new THREE.RectAreaLight(
+    lighting.rim.right.color,
+    lighting.rim.right.intensity,
+    lighting.rim.right.width * scale,
+    lighting.rim.right.height * scale,
   );
-  const secondaryRimLight = studioSpot(
-    lighting.rim.color,
-    lighting.rim.secondaryIntensity,
-    -lighting.rim.position.x,
-    lighting.rim.position.y,
-    lighting.rim.position.z,
-    lighting.rim.angle,
-    lighting.rim.penumbra,
+  const secondaryRimLight = new THREE.RectAreaLight(
+    lighting.rim.left.color,
+    lighting.rim.left.intensity,
+    lighting.rim.left.width * scale,
+    lighting.rim.left.height * scale,
   );
+  scene.add(rimLight, secondaryRimLight);
   keyLight.name = "Key";
   fillLight.name = "Fill";
-  rimLight.name = "Rim A";
-  secondaryRimLight.name = "Rim B";
+  rimLight.name = "Rim Right";
+  secondaryRimLight.name = "Rim Left";
   function applyKey() {
     keyLight.visible = lighting.key.enabled;
     keyLight.color.set(lighting.key.color);
@@ -259,38 +258,30 @@ export async function createStrnkScene({
     notifyState();
   }
   function applyRim() {
-    rimLight.visible = lighting.rim.enabled;
-    rimLight.color.set(lighting.rim.color);
-    rimLight.intensity = lighting.rim.primaryIntensity;
-    rimLight.angle = lighting.rim.angle;
-    rimLight.penumbra = lighting.rim.penumbra;
-    rimLight.position.set(
-      center.x + lighting.rim.position.x * scale,
-      center.y + lighting.rim.position.y * scale,
-      center.z + lighting.rim.position.z * scale,
-    );
-    secondaryRimLight.visible = lighting.rim.enabled;
-    secondaryRimLight.color.set(lighting.rim.color);
-    secondaryRimLight.intensity = lighting.rim.secondaryIntensity;
-    secondaryRimLight.angle = lighting.rim.angle;
-    secondaryRimLight.penumbra = lighting.rim.penumbra;
-    secondaryRimLight.position.set(
-      center.x - lighting.rim.position.x * scale,
-      center.y + lighting.rim.position.y * scale,
-      center.z + lighting.rim.position.z * scale,
-    );
-    rimLight.target.position.copy(center);
-    rimLight.target.updateMatrixWorld();
-    secondaryRimLight.target.position.copy(center);
-    secondaryRimLight.target.updateMatrixWorld();
+    const applySoftbox = (light, settings) => {
+      light.visible = settings.enabled;
+      light.color.set(settings.color);
+      light.intensity = settings.intensity;
+      light.width = settings.width * scale;
+      light.height = settings.height * scale;
+      light.position.set(
+        center.x + settings.position.x * scale,
+        center.y + settings.position.y * scale,
+        center.z + settings.position.z * scale,
+      );
+      light.lookAt(
+        center.x + settings.target.x * scale,
+        center.y + settings.target.y * scale,
+        center.z + settings.target.z * scale,
+      );
+    };
+    applySoftbox(rimLight, lighting.rim.right);
+    applySoftbox(secondaryRimLight, lighting.rim.left);
     notifyState();
   }
   function applyExposure() {
     renderer.toneMappingExposure = lighting.exposure;
   }
-  studioSpot("#fff1df", 480, -0.72, 1.18, 1.25, 0.72, 0.9);
-  studioSpot("#ddd9d2", 155, 0.2, 0.55, 1.7, 0.72, 0.9);
-  studioSpot("#ff6d2e", 210, 0.95, -0.2, -1.25, 0.62, 0.92);
   applyKey();
   applyFill();
   applyRim();

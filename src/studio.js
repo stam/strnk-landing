@@ -46,8 +46,8 @@ function updateTechnicalHelpers(nextState = state) {
   };
   addNativeLight("Key", lights.key, new THREE.Vector3(-scale * .7, 0, scale * .24));
   addNativeLight("Fill", lights.fill, new THREE.Vector3(-scale * .7, 0, scale * .24));
-  addNativeLight("Rim A", lights.rimA, new THREE.Vector3(-scale * .55, 0, -scale * .4));
-  addNativeLight("Rim B", lights.rimB, new THREE.Vector3(scale * .22, 0, -scale * .38));
+  addNativeLight("Rim right", lights.rimA, new THREE.Vector3(scale * .18, 0, -scale * .4));
+  addNativeLight("Rim left", lights.rimB, new THREE.Vector3(-scale * .58, 0, -scale * .38));
 }
 
 const composition = {

@@ -49,15 +49,23 @@ export function createSceneControls({
   fill.close();
 
   const rim = gui.addFolder('Rim');
-  add(rim.add(lighting.rim, 'enabled').name('Enabled').onChange(updateRim), 'rim-enabled');
-  add(rim.add(lighting.rim, 'primaryIntensity', 0, 1000, 1).name('Primary intensity').onChange(updateRim), 'rim-primary-intensity');
-  add(rim.add(lighting.rim, 'secondaryIntensity', 0, 1000, 1).name('Secondary intensity').onChange(updateRim), 'rim-secondary-intensity');
-  add(rim.addColor(lighting.rim, 'color').name('Color').onChange(updateRim), 'rim-color');
-  add(rim.add(lighting.rim.position, 'x', -3, 3, .01).name('X scale').onChange(updateRim), 'rim-x');
-  add(rim.add(lighting.rim.position, 'y', -3, 3, .01).name('Y scale').onChange(updateRim), 'rim-y');
-  add(rim.add(lighting.rim.position, 'z', -3, 3, .01).name('Z scale').onChange(updateRim), 'rim-z');
-  add(rim.add(lighting.rim, 'angle', .05, Math.PI / 2, .01).name('Angle').onChange(updateRim), 'rim-angle');
-  add(rim.add(lighting.rim, 'penumbra', 0, 1, .01).name('Penumbra').onChange(updateRim), 'rim-penumbra');
+  const addSoftboxControls = (name, settings, controlPrefix) => {
+    const folder = rim.addFolder(name);
+    add(folder.add(settings, 'enabled').name('Enabled').onChange(updateRim), `${controlPrefix}-enabled`);
+    add(folder.add(settings, 'intensity', 0, 200, 1).name('Intensity').onChange(updateRim), `${controlPrefix}-intensity`);
+    add(folder.addColor(settings, 'color').name('Color').onChange(updateRim), `${controlPrefix}-color`);
+    add(folder.add(settings, 'width', .1, 4, .01).name('Width scale').onChange(updateRim), `${controlPrefix}-width`);
+    add(folder.add(settings, 'height', .1, 4, .01).name('Height scale').onChange(updateRim), `${controlPrefix}-height`);
+    add(folder.add(settings.position, 'x', -3, 3, .01).name('Position X').onChange(updateRim), `${controlPrefix}-position-x`);
+    add(folder.add(settings.position, 'y', -3, 3, .01).name('Position Y').onChange(updateRim), `${controlPrefix}-position-y`);
+    add(folder.add(settings.position, 'z', -3, 3, .01).name('Position Z').onChange(updateRim), `${controlPrefix}-position-z`);
+    add(folder.add(settings.target, 'x', -3, 3, .01).name('Target X').onChange(updateRim), `${controlPrefix}-target-x`);
+    add(folder.add(settings.target, 'y', -3, 3, .01).name('Target Y').onChange(updateRim), `${controlPrefix}-target-y`);
+    add(folder.add(settings.target, 'z', -3, 3, .01).name('Target Z').onChange(updateRim), `${controlPrefix}-target-z`);
+    folder.close();
+  };
+  addSoftboxControls('Viewer right', lighting.rim.right, 'rim-right');
+  addSoftboxControls('Viewer left', lighting.rim.left, 'rim-left');
   rim.close();
 
   const floorFolder = gui.addFolder('Floor');
@@ -78,9 +86,12 @@ export function createSceneControls({
       const { position: fillPosition, ...fillDefaults } = initial.lighting.fill;
       Object.assign(lighting.fill, fillDefaults);
       Object.assign(lighting.fill.position, fillPosition);
-      const { position: rimPosition, ...rimDefaults } = initial.lighting.rim;
-      Object.assign(lighting.rim, rimDefaults);
-      Object.assign(lighting.rim.position, rimPosition);
+      for (const side of ['right', 'left']) {
+        const { position, target, ...rimDefaults } = initial.lighting.rim[side];
+        Object.assign(lighting.rim[side], rimDefaults);
+        Object.assign(lighting.rim[side].position, position);
+        Object.assign(lighting.rim[side].target, target);
+      }
       Object.assign(floor, initial.floor);
       applyKey();
       applyFill();
