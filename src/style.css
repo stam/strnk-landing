@@ -59,12 +59,11 @@ a:focus-visible { outline: 2px solid #ff7736; outline-offset: 6px; }
   .description { font-size: clamp(15px, 1.35vw, 20px); margin: 11px 0 21px; }
   .hero-media {
     position: absolute;
-    top: clamp(-110px, -6vw, -64px);
-    right: -220px;
+    top: 10%;
+    right: -100px;
     bottom: auto;
     left: auto;
     width: auto;
-    height: clamp(600px, 52vw, 998px);
     aspect-ratio: 4 / 3;
     margin-top: 0;
     transform: none;
@@ -89,16 +88,11 @@ a:focus-visible { outline: 2px solid #ff7736; outline-offset: 6px; }
   .principle { gap: 18px; padding: 4px 24px; }
   .footer { min-height: 58px; }
 }
-@media (min-width: 1200px) {
-  .hero-media { right: -100px; }
+@media (min-width: 1031px) and (max-height: 1230px ){
+  .hero-media { top: 0; }
 }
-@media (min-width: 1600px) {
-  .page { height: calc(100svh - 16px); }
-  .hero-media { right: -160px; }
-}
-@media (min-width: 1600px) { .page { padding: 0 max(5.2%, calc((100vw - 1600px) / 2)); } }
-@media (min-width: 761px) and (max-aspect-ratio: 1/1) {
-  h1 { font-size: min(23.5vw, 420px); }
+@media (min-width: 1600px) { 
+  .page { padding: 0 max(5.2%, calc((100vw - 1600px) / 2)); } 
 }
 @media (max-width: 1100px) and (min-width: 761px) {
   .principle { gap: 16px; padding: 4px 20px; }
