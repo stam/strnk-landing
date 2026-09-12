@@ -99,7 +99,7 @@ export async function createStrnkScene({
   const lighting = {
     exposure: renderer.toneMappingExposure,
     key: {
-      enabled: false,
+      enabled: true,
       color: "#ffffff",
       intensity: 19.3,
       width: 1.84,

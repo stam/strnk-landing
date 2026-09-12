@@ -13,7 +13,6 @@
 
 ## Local environment
 
-- The user runs the Yarn dev server in their own terminal at `http://127.0.0.1:5173/`. Before any build or run command, check that URL/port first. Reuse the running server for browser reviews; do not start a duplicate server or stop/restart the user's server. Only start a dev server if the port check confirms none is running.
 - Windows workspace; use PowerShell. Start one persistent PowerShell session, reuse it for shell work, and close it with `exit` after work.
 - Yarn 1.22.19 is installed under `C:\Program Files\nodejs`. Plain `yarn` works when the user's `CurrentUser` execution policy (`RemoteSigned`) is loaded. If a sandboxed PowerShell resolves the blocked `yarn.ps1` shim, call `yarn.cmd` explicitly. `yarn.cmd build` is verified from PowerShell.
 - Prefer native Blender MCP tools; discover deferred tools and probe `get_blendfile_summary_path_info` first. Connection refused means start Blender and its Lab MCP server, not reinstall the bridge.
