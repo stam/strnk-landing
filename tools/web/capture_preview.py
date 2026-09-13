@@ -41,10 +41,12 @@ with sync_playwright() as p:
         else:
             page.locator('.hero-image').wait_for(timeout=30000)
             page.wait_for_function("document.querySelector('.hero-image').complete && document.querySelector('.hero-image').naturalWidth > 0")
-            project_images = page.locator('.project-image img')
+            project_images = page.locator('.project-image-original')
             if project_images.count() != 3:
                 raise RuntimeError('Homepage must include three project timeline images')
-            page.wait_for_function("""() => [...document.querySelectorAll('.project-image img')]
+            if page.locator('.project-preview').count() != 3:
+                raise RuntimeError('Homepage must include three project preview buttons')
+            page.wait_for_function("""() => [...document.querySelectorAll('.project-image-original')]
                 .every((image) => image.complete && image.naturalWidth > 0)""")
             if page.locator('#projects .project-link').count() != 3:
                 raise RuntimeError('Homepage must include three repository links')

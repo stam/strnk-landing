@@ -17,6 +17,29 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body>
+    <svg class="filter-definitions" aria-hidden="true" focusable="false">
+      <filter id="project-orange-only" color-interpolation-filters="sRGB">
+        <feColorMatrix
+          in="SourceGraphic"
+          type="matrix"
+          result="red-greater"
+          values="1 0 0 0 0
+                  0 1 0 0 0
+                  0 0 1 0 0
+                  12 -12 0 0 -0.3"
+        />
+        <feColorMatrix
+          in="SourceGraphic"
+          type="matrix"
+          result="green-greater"
+          values="1 0 0 0 0
+                  0 1 0 0 0
+                  0 0 1 0 0
+                  0 12 -12 0 -0.3"
+        />
+        <feComposite in="red-greater" in2="green-greater" operator="in" />
+      </filter>
+    </svg>
     <div class="page">
       <header class="header">
         <!-- <a class="brand" href="./" aria-label="STRNK home"><img src="/brand-mark.svg" alt="" /></a> -->
@@ -92,19 +115,21 @@
           </div>
           <ol class="project-timeline">
             <li class="project-entry">
-              <time datetime="2017-09">Started Sep 2017</time>
+              <time datetime="2019-07">Started Jul 2019</time>
               <article class="project-card">
                 <figure class="project-image">
-                  <img src="/projects/finance.png" alt="GitHub repository overview for the Finance project" />
-                  <figcaption>Repository overview</figcaption>
+                  <button class="project-preview" type="button" aria-pressed="false" aria-label="Show full color preview of Tankbattle Renderer">
+                    <img class="project-image-original" src="/projects/tankbattle-renderer.png" alt="3D tank battle game renderer interface preview" />
+                    <img class="project-image-muted" src="/projects/tankbattle-renderer.png" alt="" aria-hidden="true" />
+                  </button>
                 </figure>
                 <div class="project-copy">
-                  <h3>Green sofa</h3>
-                  <p>A personal finance web app for keeping track of your spending habits. Automatically syncs with your bank account, allows you to categorize expenses, and presents your budget in an easy overview allowing you to keep track of spending & saving. <br><br> Still in use today</p>
+                  <h3>Tankbattle Renderer</h3>
+                  <p>A 3D frontend for a program-your-own-tank game, used for developer offsites. Watch code-controlled tanks compete to be the last one standing.</p>
                   <ul class="project-tags" aria-label="Technologies used">
-                    <li>React</li><li>TypeScript</li><li>Python</li><li>Django</li><li>Scraping</li>
+                    <li>Three.js</li><li>JavaScript</li><li>3D</li>
                   </ul>
-                  <a class="project-link" href="https://github.com/stam/finance">View repository <span aria-hidden="true">↗</span></a>
+                  <a class="project-link" href="https://github.com/stam/tankbattle-renderer">View repository <span aria-hidden="true">↗</span></a>
                 </div>
               </article>
             </li>
@@ -112,7 +137,10 @@
               <time datetime="2018-08">Started Aug 2018</time>
               <article class="project-card">
                 <figure class="project-image">
-                  <img src="/projects/crypto.png" alt="Interface screenshot from the Crypto trading strategy project" />
+                  <button class="project-preview project-preview--crypto" type="button" aria-pressed="false" aria-label="Show full color preview of Crypto">
+                    <img class="project-image-original" src="/projects/crypto.png" alt="Interface screenshot from the Crypto trading strategy project" />
+                    <img class="project-image-muted" src="/projects/crypto.png" alt="" aria-hidden="true" />
+                  </button>
                 </figure>
                 <div class="project-copy">
                   <h3>Crypto</h3>
@@ -125,18 +153,21 @@
               </article>
             </li>
             <li class="project-entry">
-              <time datetime="2019-07">Started Jul 2019</time>
+              <time datetime="2017-09">Started Sep 2017</time>
               <article class="project-card">
                 <figure class="project-image">
-                  <img src="/projects/tankbattle-renderer.png" alt="3D tank battle game renderer interface preview" />
+                  <button class="project-preview" type="button" aria-pressed="false" aria-label="Show full color preview of Green sofa">
+                    <img class="project-image-original" src="/projects/finance.png" alt="Budget overview chart from the Green sofa personal finance app" />
+                    <img class="project-image-muted" src="/projects/finance.png" alt="" aria-hidden="true" />
+                  </button>
                 </figure>
                 <div class="project-copy">
-                  <h3>Tankbattle Renderer</h3>
-                  <p>A 3D frontend for a program-your-own-tank game, used for developer offsites. Watch code-controlled tanks compete to be the last one standing.</p>
+                  <h3>Green sofa</h3>
+                  <p>A personal finance web app for keeping track of your spending habits. Automatically syncs with your bank account, allows you to categorize expenses, and presents your budget in an easy overview allowing you to keep track of spending &amp; saving. <br /><br /> Still in use today</p>
                   <ul class="project-tags" aria-label="Technologies used">
-                    <li>Three.js</li><li>JavaScript</li><li>3D</li>
+                    <li>React</li><li>TypeScript</li><li>Python</li><li>Django</li><li>Scraping</li>
                   </ul>
-                  <a class="project-link" href="https://github.com/stam/tankbattle-renderer">View repository <span aria-hidden="true">↗</span></a>
+                  <a class="project-link" href="https://github.com/stam/finance">View repository <span aria-hidden="true">↗</span></a>
                 </div>
               </article>
             </li>
