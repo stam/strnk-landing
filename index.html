@@ -21,28 +21,29 @@
       <header class="header">
         <!-- <a class="brand" href="./" aria-label="STRNK home"><img src="/brand-mark.svg" alt="" /></a> -->
       </header>
-      <main class="hero">
-        <div class="hero-copy">
-          <h1>STRNK<span class="period">.</span></h1>
+      <main class="site-main">
+        <section class="hero" aria-labelledby="site-title">
+          <div class="hero-copy">
+          <h1 id="site-title">STRNK<span class="period">.</span></h1>
           <p class="subtitle">Powerful software.</p>
           <p class="description">
             I build software that makes complex systems tangible.<br />
             From financial data and trading simulations to real-time 3D ⇒ tools
             you can see, test and use.
           </p>
-          <a class="button hero-link" href="#approach"
-            >How I build <span aria-hidden="true">↗</span></a
+          <a class="button hero-link" href="#projects"
+            >See my work <span aria-hidden="true">↓</span></a
           >
-        </div>
-        <div class="hero-media">
+          </div>
+          <div class="hero-media">
           <img
             class="hero-image"
             src="/assets/strnk-hero-wide.png"
             alt="A sculptural tree stump with flexing fists and spreading roots, lit by warm orange light from a low viewpoint"
           />
-        </div>
-      </main>
-      <section class="principles" id="approach" aria-label="The STRNK approach">
+          </div>
+        </section>
+        <section class="principles" id="approach" aria-label="The STRNK approach">
         <article class="principle">
           <svg viewBox="0 0 32 32" aria-hidden="true">
             <path d="m16 2 12 7v14l-12 7L4 23V9Zm0 14L4 9m12 7 12-7M16 16v14" />
@@ -83,7 +84,65 @@
             <p>A little better<br />every day.</p>
           </div>
         </article>
-      </section>
+        </section>
+        <section class="projects" id="projects" aria-labelledby="projects-title">
+          <div class="projects-heading">
+            <p class="section-label">Selected work</p>
+            <h2 id="projects-title">Hobby projects.</h2>
+          </div>
+          <ol class="project-timeline">
+            <li class="project-entry">
+              <time datetime="2017-09">Started Sep 2017</time>
+              <article class="project-card">
+                <figure class="project-image">
+                  <img src="/projects/finance.png" alt="GitHub repository overview for the Finance project" />
+                  <figcaption>Repository overview</figcaption>
+                </figure>
+                <div class="project-copy">
+                  <h3>Finance</h3>
+                  <p>A personal finance web app for keeping track of your money in one place.</p>
+                  <ul class="project-tags" aria-label="Technologies used">
+                    <li>React</li><li>TypeScript</li><li>Django</li>
+                  </ul>
+                  <a class="project-link" href="https://github.com/stam/finance">View repository <span aria-hidden="true">↗</span></a>
+                </div>
+              </article>
+            </li>
+            <li class="project-entry">
+              <time datetime="2018-08">Started Aug 2018</time>
+              <article class="project-card">
+                <figure class="project-image">
+                  <img src="/projects/crypto.png" alt="Interface screenshot from the Crypto trading strategy project" />
+                </figure>
+                <div class="project-copy">
+                  <h3>Crypto</h3>
+                  <p>A playground for crypto trading strategies. Backtest against historical market data and explore the results in an interactive chart.</p>
+                  <ul class="project-tags" aria-label="Technologies used">
+                    <li>React</li><li>Node.js</li><li>Backtesting</li>
+                  </ul>
+                  <a class="project-link" href="https://github.com/stam/crypto">View repository <span aria-hidden="true">↗</span></a>
+                </div>
+              </article>
+            </li>
+            <li class="project-entry">
+              <time datetime="2019-07">Started Jul 2019</time>
+              <article class="project-card">
+                <figure class="project-image">
+                  <img src="/projects/tankbattle-renderer.png" alt="3D tank battle game renderer interface preview" />
+                </figure>
+                <div class="project-copy">
+                  <h3>Tankbattle Renderer</h3>
+                  <p>A 3D frontend for a developer tank battle game. Watch code-controlled tanks compete to be the last one standing.</p>
+                  <ul class="project-tags" aria-label="Technologies used">
+                    <li>Three.js</li><li>JavaScript</li><li>3D</li>
+                  </ul>
+                  <a class="project-link" href="https://github.com/stam/tankbattle-renderer">View repository <span aria-hidden="true">↗</span></a>
+                </div>
+              </article>
+            </li>
+          </ol>
+        </section>
+      </main>
       <footer class="footer">
         <span
           >STRNK. <span class="footer-tagline">POWERFUL SOFTWARE.</span></span

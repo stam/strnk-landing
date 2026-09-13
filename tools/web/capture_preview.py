@@ -17,7 +17,7 @@ if '--only' in args:
     del args[index:index + 2]
 url = args[0] if args else 'http://127.0.0.1:5173/'
 is_studio = url.split('?', 1)[0].rstrip('/').endswith('studio.html')
-captures = [('desktop', '', 1440, 900)] if is_studio else [('desktop', '', 1440, 900), ('mobile', '', 390, 844), ('concept-size', '', 1122, 1402), ('small-mobile', '', 320, 740)]
+captures = [('desktop', '', 1440, 900)] if is_studio else [('desktop', '', 1440, 900), ('tablet', '', 820, 1180), ('mobile', '', 390, 844), ('concept-size', '', 1122, 1402), ('small-mobile', '', 320, 740)]
 if only:
     captures = [capture for capture in captures if capture[0] == only]
     if not captures:
@@ -37,10 +37,20 @@ with sync_playwright() as p:
         if is_studio:
             page.locator('.studio-main.ready').wait_for(timeout=30000)
             page.locator('#studio-canvas').wait_for(timeout=30000)
-            page.locator('.lil-gui').wait_for(timeout=30000)
+            page.locator('.lil-gui[data-scene-controls]').wait_for(timeout=30000)
         else:
             page.locator('.hero-image').wait_for(timeout=30000)
             page.wait_for_function("document.querySelector('.hero-image').complete && document.querySelector('.hero-image').naturalWidth > 0")
+            project_images = page.locator('.project-image img')
+            if project_images.count() != 3:
+                raise RuntimeError('Homepage must include three project timeline images')
+            page.wait_for_function("""() => [...document.querySelectorAll('.project-image img')]
+                .every((image) => image.complete && image.naturalWidth > 0)""")
+            if page.locator('#projects .project-link').count() != 3:
+                raise RuntimeError('Homepage must include three repository links')
+            cta = page.locator('.hero-link')
+            if cta.get_attribute('href') != '#projects':
+                raise RuntimeError('Hero CTA must link to the project timeline')
             if page.locator('canvas, [href*="studio"]').count():
                 raise RuntimeError('Homepage still includes a canvas or Studio link')
         page.evaluate('document.fonts.ready')

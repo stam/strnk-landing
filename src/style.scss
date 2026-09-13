@@ -49,7 +49,7 @@ a {
   isolation: isolate;
   min-height: 100svh;
   padding: 0 5.2%;
-  overflow: hidden;
+  overflow-x: clip;
   background: radial-gradient(ellipse at 67% 62%, #1d1b18a6, transparent 46%),
     $page-surface;
 }
@@ -59,6 +59,171 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.projects {
+  position: relative;
+  max-width: 1420px;
+  margin: 0 auto;
+  padding: clamp(76px, 10vw, 148px) 0 clamp(64px, 9vw, 128px);
+  scroll-margin-top: 20px;
+}
+
+.projects-heading {
+  max-width: 660px;
+  margin: 0 0 clamp(52px, 7vw, 96px);
+
+  h2 {
+    margin: 10px 0 0;
+    color: $page-text;
+    font-size: clamp(29px, 4vw, 55px);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.055em;
+  }
+}
+
+.section-label {
+  margin: 0;
+  color: $accent;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.project-timeline {
+  position: relative;
+  display: grid;
+  gap: clamp(64px, 8vw, 118px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &::before {
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    left: 0;
+    width: 1px;
+    background: $hairline;
+    content: "";
+  }
+}
+
+.project-entry {
+  position: relative;
+  display: grid;
+  grid-template-columns: 154px minmax(0, 1fr);
+  gap: clamp(28px, 4vw, 72px);
+  padding-left: 28px;
+
+  &::before {
+    position: absolute;
+    top: 4px;
+    left: -4px;
+    width: 9px;
+    height: 9px;
+    border: 2px solid $page-surface;
+    border-radius: 50%;
+    background: $accent;
+    box-shadow: 0 0 0 1px #ff773660;
+    content: "";
+  }
+
+  time {
+    color: #b6b3aa;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+}
+
+.project-card {
+  display: grid;
+  grid-template-columns: minmax(300px, 1.35fr) minmax(230px, 0.65fr);
+  gap: clamp(28px, 4.2vw, 72px);
+  padding-bottom: clamp(64px, 8vw, 112px);
+  border-bottom: 1px solid $hairline;
+}
+
+.project-image {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+
+  img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    border: 1px solid #e8e5db2e;
+    border-radius: 3px;
+    background: #181715;
+    object-fit: contain;
+  }
+
+  figcaption {
+    color: #87847d;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+.project-copy {
+  align-self: center;
+
+  h3 {
+    margin: 0 0 12px;
+    color: $page-text;
+    font-size: clamp(24px, 2.3vw, 36px);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.055em;
+  }
+
+  p {
+    margin: 0;
+    color: $muted-text;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+}
+
+.project-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 21px 0 24px;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 5px 8px;
+    border: 1px solid #e8e5db30;
+    border-radius: 2px;
+    color: #b9b6ae;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+}
+
+.project-link {
+  display: inline-flex;
+  gap: 9px;
+  color: $page-text;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration-color: #ff7736;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+
+  span {
+    color: $accent;
+  }
 }
 
 .header {
@@ -291,10 +456,7 @@ h1 {
 
 @include desktop {
   .page {
-    display: grid;
-    grid-template-rows: 72px minmax(0, 1fr) auto 58px;
-    min-height: 0;
-    height: 100svh;
+    min-height: 100svh;
   }
 
   .header {
@@ -302,7 +464,7 @@ h1 {
   }
 
   .hero {
-    min-height: 0;
+    min-height: calc(100svh - 72px);
   }
 
   .hero-copy {
@@ -386,6 +548,22 @@ h1 {
     p {
       font-size: 13px;
     }
+  }
+}
+
+@media (min-width: #{$mobile + 1px}) and (max-width: $tablet) {
+  .project-entry {
+    grid-template-columns: 116px minmax(0, 1fr);
+    gap: 30px;
+  }
+
+  .project-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 27px;
+  }
+
+  .project-copy {
+    max-width: 620px;
   }
 }
 
@@ -495,6 +673,34 @@ h1 {
 
   .edition::before {
     display: none;
+  }
+
+  .projects {
+    padding-top: 72px;
+  }
+
+  .projects-heading {
+    margin-bottom: 52px;
+  }
+
+  .project-timeline {
+    gap: 62px;
+  }
+
+  .project-entry {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    padding-left: 22px;
+  }
+
+  .project-card {
+    grid-template-columns: 1fr;
+    gap: 25px;
+    padding-bottom: 62px;
+  }
+
+  .project-copy h3 {
+    font-size: 28px;
   }
 }
 
