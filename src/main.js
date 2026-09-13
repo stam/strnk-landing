@@ -7,7 +7,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { SSAOPass } from "three/addons/postprocessing/SSAOPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { createContour } from "./contour.js";
-import "./style.css";
+import "./style.scss";
 
 /**
  * The production scene factory is shared by the landing page and studio page.
