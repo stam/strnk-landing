@@ -37,7 +37,39 @@
                   0 0 1 0 0
                   0 12 -12 0 -0.3"
         />
-        <feComposite in="red-greater" in2="green-greater" operator="in" />
+        <feComposite in="red-greater" in2="green-greater" operator="in" result="orange-original" />
+        <feColorMatrix
+          in="SourceGraphic"
+          type="matrix"
+          result="magenta-chroma"
+          values="1 0 0 0 0
+                  0 1 0 0 0
+                  0 0 1 0 0
+                  4 -8 4 0 -0.6"
+        />
+        <feColorMatrix
+          in="SourceGraphic"
+          type="matrix"
+          result="magenta-red-present"
+          values="1 0 0 0 0
+                  0 1 0 0 0
+                  0 0 1 0 0
+                  4 0 0 0 -1"
+        />
+        <feComposite in="magenta-chroma" in2="magenta-red-present" operator="in" result="magenta-mask" />
+        <feColorMatrix
+          in="magenta-mask"
+          type="matrix"
+          result="magenta-orange"
+          values="0.2126 0.7152 0.0722 0 0
+                  0.0991 0.3333 0.0336 0 0
+                  0.0451 0.1520 0.0153 0 0
+                  0 0 0 1 0"
+        />
+        <feMerge>
+          <feMergeNode in="orange-original" />
+          <feMergeNode in="magenta-orange" />
+        </feMerge>
       </filter>
     </svg>
     <div class="page">
