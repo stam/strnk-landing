@@ -41,22 +41,22 @@
         <feColorMatrix
           in="SourceGraphic"
           type="matrix"
-          result="magenta-chroma"
+          result="magenta-red-greater"
           values="1 0 0 0 0
                   0 1 0 0 0
                   0 0 1 0 0
-                  4 -8 4 0 -0.6"
+                  12 -12 0 0 -1.2"
         />
         <feColorMatrix
           in="SourceGraphic"
           type="matrix"
-          result="magenta-red-present"
+          result="blue-greater"
           values="1 0 0 0 0
                   0 1 0 0 0
                   0 0 1 0 0
-                  4 0 0 0 -1"
+                  0 -12 12 0 -1.2"
         />
-        <feComposite in="magenta-chroma" in2="magenta-red-present" operator="in" result="magenta-mask" />
+        <feComposite in="magenta-red-greater" in2="blue-greater" operator="in" result="magenta-mask" />
         <feColorMatrix
           in="magenta-mask"
           type="matrix"
